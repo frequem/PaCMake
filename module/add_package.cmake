@@ -1,0 +1,45 @@
+include(CMakeParseArguments)
+
+pacmake_include(parse_args)
+pacmake_include(download_package)
+pacmake_include(log)
+
+#pacmake_add_package(name [STATIC|SHARED] VERSION version)
+function(pacmake_add_package)
+	cmake_parse_arguments(args "" "VERSION" "" ${ARGN})
+	pacmake_parse_args(args_NAME args_TYPE VALUES ${args_UNPARSED_ARGUMENTS})
+	
+	if(NOT args_NAME)
+		pacmake_log(ERROR "pacmake_add_package: No name specified")
+		return()
+	endif()
+	
+	if(NOT args_VERSION)
+		pacmake_get_default_version(${args_NAME} args_VERSION)
+		pacmake_log(WARNING "pacmake_add_package(${args_NAME}): No version specified, using default version instead.")
+	endif()
+	if(NOT args_VERSION)
+		pacmake_log(ERROR "pacmake_add_package(${args_NAME}): No version specified and no default version set. Does the package exist?")
+		return()
+	endif()
+	
+	if(NOT args_TYPE)
+		set(args_TYPE ${PACMAKE_DEFAULT_LIBRARY_TYPE})
+	endif()
+		
+	set(BUILD_SHARED_LIBS_ORIG "${BUILD_SHARED_LIBS}")
+	if(${args_TYPE} STREQUAL "STATIC")
+		set(BUILD_SHARED_LIBS OFF)
+	elseif(${args_TYPE} STREQUAL "SHARED")
+		set(BUILD_SHARED_LIBS ON)
+	else()
+		pacmake_log(ERROR "pacmake_add_package(${args_NAME}, ${args_VERSION}): Unknown library type: ${args_TYPE}")
+		message(FATAL_ERROR)
+	endif()
+	
+	pacmake_log(INFO "Fetching ${args_NAME}(${args_VERSION})...")
+	pacmake_download_package(${args_NAME} ${args_VERSION} source_dir)
+	add_subdirectory(${source_dir} "${source_dir}/build")
+	
+	set(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS_ORIG}")
+endfunction(pacmake_add_package)

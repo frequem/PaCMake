@@ -1,0 +1,8 @@
+function(pacmake_scan_packages)
+	file(GLOB files "${PACMAKE_BASEDIR}/package/*")
+	foreach(file ${files})
+		if(IS_DIRECTORY ${file} AND EXISTS "${file}/package.cmake")
+			include("${file}/package.cmake")
+		endif()
+	endforeach()
+endfunction(pacmake_scan_packages)
