@@ -8,8 +8,8 @@ function(pacmake_register_package args_NAME)
 	cmake_parse_arguments(
         args
         ""
-        "VERSION;URL_HASH;HTTP_USERNAME;HTTP_PASSWORD;GIT_REPOSITORY;GIT_TAG;SVN_REPOSITORY;SVN_REVISION;SVN_USERNAME;SVN_PASSWORD;HG_REPOSITORY;HG_TAG;CVS_REPOSITORY;CVS_MODULE;CVS_TAG"
-        "URL;HTTP_HEADER"
+        "PATCH;VERSION;URL_HASH;HTTP_USERNAME;HTTP_PASSWORD;GIT_REPOSITORY;GIT_TAG;SVN_REPOSITORY;SVN_REVISION;SVN_USERNAME;SVN_PASSWORD;HG_REPOSITORY;HG_TAG;CVS_REPOSITORY;CVS_MODULE;CVS_TAG"
+        "URL;HTTP_HEADER;DEPENDENCIES;CMAKE_ARGS"
         ${ARGN}
     )
 	
@@ -21,24 +21,35 @@ function(pacmake_register_package args_NAME)
 		return()
 	endif()
 	
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} URL "${args_URL}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} URL_HASH "${args_URL_HASH}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} HTTP_USERNAME "${args_HTTP_USERNAME}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} HTTP_PASSWORD "${args_HTTP_PASSWORD}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} HTTP_HEADER "${args_HTTP_HEADER}")
+	#append to package list
+	list(FIND PACMAKE_PACKAGE_LIST ${args_NAME} i)
+	if(${i} LESS 0)
+		list(APPEND PACMAKE_PACKAGE_LIST ${args_NAME})
+		set(PACMAKE_PACKAGE_LIST ${PACMAKE_PACKAGE_LIST} CACHE INTERNAL "PACMAKE_PACKAGE_LIST")
+	endif()
 	
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} GIT_REPOSITORY "${args_GIT_REPOSITORY}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} GIT_TAG "${args_GIT_TAG}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} DEPENDENCIES GENERIC "${args_DEPENDENCIES}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} PATCH GENERIC "${args_PATCH}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} CMAKE_ARGS GENERIC "${args_CMAKE_ARGS}")
+		
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} URL DOWNLOAD "${args_URL}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} URL_HASH DOWNLOAD "${args_URL_HASH}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} HTTP_USERNAME DOWNLOAD "${args_HTTP_USERNAME}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} HTTP_PASSWORD DOWNLOAD "${args_HTTP_PASSWORD}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} HTTP_HEADER DOWNLOAD "${args_HTTP_HEADER}")
 	
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} SVN_REPOSITORY "${args_SVN_REPOSITORY}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} SVN_REVISION "${args_SVN_REVISION}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} SVN_USERNAME "${args_SVN_USERNAME}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} SVN_PASSWORD "${args_SVN_PASSWORD}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} GIT_REPOSITORY DOWNLOAD "${args_GIT_REPOSITORY}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} GIT_TAG DOWNLOAD "${args_GIT_TAG}")
 	
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} HG_REPOSITORY "${args_HG_REPOSITORY}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} HG_TAG "${args_HG_TAG}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} SVN_REPOSITORY DOWNLOAD "${args_SVN_REPOSITORY}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} SVN_REVISION DOWNLOAD "${args_SVN_REVISION}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} SVN_USERNAME DOWNLOAD "${args_SVN_USERNAME}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} SVN_PASSWORD DOWNLOAD "${args_SVN_PASSWORD}")
 	
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} CVS_REPOSITORY "${args_CVS_REPOSITORY}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} CVS_MODULE "${args_CVS_MODULE}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} CVS_TAG "${args_CVS_TAG}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} HG_REPOSITORY DOWNLOAD "${args_HG_REPOSITORY}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} HG_TAG DOWNLOAD "${args_HG_TAG}")
+	
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} CVS_REPOSITORY DOWNLOAD "${args_CVS_REPOSITORY}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} CVS_MODULE DOWNLOAD "${args_CVS_MODULE}")
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} CVS_TAG DOWNLOAD "${args_CVS_TAG}")
 endfunction(pacmake_register_package)

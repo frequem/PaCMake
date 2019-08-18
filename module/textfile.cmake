@@ -1,0 +1,50 @@
+pacmake_include(log)
+
+#pacmake_textfilefile_insert(file line data)
+function(pacmake_textfile_insert file line data)
+	file(READ "${file}" contents)
+	string(REGEX MATCHALL "(([^\n]*)\n)|([^\n]+)" contents_list "${contents}")
+	
+	list(LENGTH contents_list len)
+	if(${line} GREATER ${len})
+		set(line ${len})
+	elseif(${line} LESS 0)
+		set(line 0)
+	endif()
+		
+	list(INSERT contents_list ${line} ${data})
+	
+	file(WRITE "${file}" ${contents_list})	
+endfunction(pacmake_textfile_insert)
+
+#pacmake_textfile_remove(file line linecount)
+function(pacmake_textfile_remove file line count)
+	file(READ "${file}" contents)
+	string(REGEX MATCHALL "(([^\n]*)\n)|([^\n]+)" contents_list "${contents}")
+	
+	list(LENGTH contents_list len)
+	if(${line} GREATER_EQUAL ${len})
+		return()
+	elseif(${line} LESS 0)
+		set(line 0)
+	endif()
+	
+	math(EXPR end "${line}+${count}")
+	if(${end} GREATER ${len})
+		set(end ${len})
+	endif()
+	set(i ${line})
+	while(${i} LESS ${end})
+		list(REMOVE_AT contents_list ${line})
+		math(EXPR i "${i}+1")
+	endwhile()	
+	
+	file(WRITE "${file}" ${contents_list})
+endfunction(pacmake_textfile_remove)
+
+#pacmake_textfile_replace(file orig replace)
+function(pacmake_textfile_replace file orig replace)
+	file(READ "${file}" contents)
+	string(REPLACE "${orig}" "${replace}" contents "${contents}")
+	file(WRITE "${file}" "${contents}")
+endfunction(pacmake_textfile_replace)

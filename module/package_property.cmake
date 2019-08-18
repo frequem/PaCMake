@@ -1,8 +1,8 @@
 pacmake_include(parse_args)
 
-#pacmake_set_package_property(package version property value)
+#pacmake_set_package_property(package version property [DOWNLOAD|GENERIC] value)
 function(pacmake_set_package_property)
-	pacmake_parse_args(args_PACKAGE args_VERSION args_PROPERTY VALUES ${ARGV})
+	pacmake_parse_args(args_PACKAGE args_VERSION args_PROPERTY args_TYPE VALUES ${ARGV})
 	
 	if(NOT args_PACKAGE)
 		pacmake_log(ERROR "pacmake_set_package_property(): No package name specified.")
@@ -19,11 +19,13 @@ function(pacmake_set_package_property)
 	endif()
 	set(PACMAKE_PACKAGE_${args_PACKAGE}_${args_VERSION}_${args_PROPERTY} "${PACMAKE_UNUSED_ARGS}" CACHE INTERNAL "PACMAKE_PACKAGE_${args_PACKAGE}_${args_VERSION}_${args_PROPERTY}")
 	
-	set(prop_list ${PACMAKE_PACKAGE_PROPERTIES_${args_PACKAGE}_${args_VERSION}})
-	list (FIND prop_list "${args_PROPERTY}" i) #IN_LIST only available from cmake 3.3 onward
-	if(${i} LESS 0)
-		list(APPEND prop_list ${args_PROPERTY})
-		set(PACMAKE_PACKAGE_PROPERTIES_${args_PACKAGE}_${args_VERSION} "${prop_list}" CACHE INTERNAL "PACMAKE_PACKAGE_PROPERTIES_${args_PACKAGE}_${args_VERSION}")
+	if("${args_TYPE}" STREQUAL "DOWNLOAD")	
+		set(prop_list ${PACMAKE_PACKAGE_DOWNLOAD_PROPERTIES_${args_PACKAGE}_${args_VERSION}})
+		list (FIND prop_list "${args_PROPERTY}" i) #IN_LIST only available from cmake 3.3 onward
+		if(${i} LESS 0)
+			list(APPEND prop_list ${args_PROPERTY})
+			set(PACMAKE_PACKAGE_DOWNLOAD_PROPERTIES_${args_PACKAGE}_${args_VERSION} "${prop_list}" CACHE INTERNAL "PACMAKE_PACKAGE_PROPERTIES_${args_PACKAGE}_${args_VERSION}")
+		endif()
 	endif()
 endfunction(pacmake_set_package_property)
 
@@ -32,12 +34,12 @@ function(pacmake_get_package_property args_PACKAGE args_VERSION args_PROPERTY ou
 	set(${out_value} "${PACMAKE_PACKAGE_${args_PACKAGE}_${args_VERSION}_${args_PROPERTY}}" PARENT_SCOPE)
 endfunction(pacmake_get_package_property)
 
-#pacmake_get_property_list(package version out_list)
-function(pacmake_get_property_list args_PACKAGE args_VERSION out_list)
+#pacmake_get_download_properties(package version out_list)
+function(pacmake_get_download_properties args_PACKAGE args_VERSION out_list)
 	set(key_val_list "")
-	foreach(key IN ITEMS ${PACMAKE_PACKAGE_PROPERTIES_${args_PACKAGE}_${args_VERSION}})
+	foreach(key IN ITEMS ${PACMAKE_PACKAGE_DOWNLOAD_PROPERTIES_${args_PACKAGE}_${args_VERSION}})
 		pacmake_get_package_property(${args_PACKAGE} ${args_VERSION} ${key} val)
 		list(APPEND key_val_list ${key} ${val})
 	endforeach()
 	set(${out_list} "${key_val_list}" PARENT_SCOPE)
-endfunction(pacmake_get_property_list)
+endfunction(pacmake_get_download_properties)

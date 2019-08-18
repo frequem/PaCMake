@@ -4,7 +4,7 @@ include("../../../../PaCMake.cmake")
 
 project(gtest_example C CXX)
 
-pacmake_add_package(googletest SHARED VERSION 1.8.1)
+pacmake_add_package(GTest VERSION 1.8.1)
 
 add_executable(${PROJECT_NAME} "main.cpp")
-target_link_libraries(${PROJECT_NAME} PUBLIC gtest)
+target_link_libraries(${PROJECT_NAME} PUBLIC GTest::gtest)

@@ -2,6 +2,7 @@ include(CMakeParseArguments)
 
 pacmake_include(parse_args)
 pacmake_include(download_package)
+pacmake_include(build_package)
 pacmake_include(log)
 
 #pacmake_add_package(name [STATIC|SHARED] VERSION version)
@@ -26,20 +27,42 @@ function(pacmake_add_package)
 	if(NOT args_TYPE)
 		set(args_TYPE ${PACMAKE_DEFAULT_LIBRARY_TYPE})
 	endif()
-		
-	set(BUILD_SHARED_LIBS_ORIG "${BUILD_SHARED_LIBS}")
-	if(${args_TYPE} STREQUAL "STATIC")
-		set(BUILD_SHARED_LIBS OFF)
-	elseif(${args_TYPE} STREQUAL "SHARED")
-		set(BUILD_SHARED_LIBS ON)
+	
+	pacmake_get_package_property(${args_NAME} ${args_VERSION} DEPENDENCIES deps)
+	foreach(dep IN ITEMS ${deps})
+		pacmake_log(INFO "pacmake_add_package(${args_NAME}, ${args_VERSION}): Depends on ${dep}...")		
+		pacmake_add_package(${dep})
+		#version should be set now
+		pacmake_get_package_property(${dep} ${PACMAKE_PACKAGE_VERSION_${dep}} INSTALL_PATH dep_install_path)
+		pacmake_get_package_property(${args_NAME} ${args_VERSION} DEPENDENCY_PREFIX_PATH dep_prefixes)
+		list(FIND dep_prefixes "${dep_install_path}" i)
+		if(${i} LESS 0)
+			list(APPEND dep_prefixes ${dep_install_path})
+			pacmake_set_package_property(${args_NAME} ${args_VERSION} DEPENDENCY_PREFIX_PATH GENERIC ${dep_prefixes})
+		endif()
+	endforeach()
+	
+	if(NOT PACMAKE_PACKAGE_VERSION_${args_NAME})
+		pacmake_download_package(${args_NAME} ${args_VERSION} dir)
+		pacmake_build_package(${args_NAME} ${args_VERSION} ${dir} ${args_TYPE})
+	
+		set(package_path "${dir}/install")
+		list(APPEND CMAKE_PREFIX_PATH ${package_path})
+		set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} CACHE INTERNAL "CMAKE_PREFIX_PATH")
+		pacmake_set_package_property(${args_NAME} ${args_VERSION} INSTALL_PATH GENERIC "${package_path}")
+		set(PACMAKE_PACKAGE_VERSION_${args_NAME} ${args_VERSION} CACHE INTERNAL "PACMAKE_PACKAGE_VERSION_${args_NAME}")
 	else()
-		pacmake_log(ERROR "pacmake_add_package(${args_NAME}, ${args_VERSION}): Unknown library type: ${args_TYPE}")
-		message(FATAL_ERROR)
+		pacmake_log(WARNING "pacmake_add_package(${args_NAME}): Package has already been installed, skipping build...")
 	endif()
 	
-	pacmake_log(INFO "Fetching ${args_NAME}(${args_VERSION})...")
-	pacmake_download_package(${args_NAME} ${args_VERSION} source_dir)
-	add_subdirectory(${source_dir} "${source_dir}/build")
-	
-	set(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS_ORIG}")
+	pacmake_log(INFO "pacmake_add_package(${args_NAME}, ${args_VERSION}): Running find_package...")
+	find_package(${args_NAME} REQUIRED 
+		NO_CMAKE_ENVIRONMENT_PATH
+		NO_CMAKE_SYSTEM_PATH
+		NO_SYSTEM_ENVIRONMENT_PATH
+		NO_CMAKE_PACKAGE_REGISTRY
+		NO_CMAKE_BUILDS_PATH
+		NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
+		NO_CMAKE_FIND_ROOT_PATH
+	)
 endfunction(pacmake_add_package)

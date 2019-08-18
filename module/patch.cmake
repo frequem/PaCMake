@@ -1,0 +1,26 @@
+pacmake_include(log)
+
+#pacmake_run_patch(patchname [PRECONFIGURE|PREBUILD|POSTBUILD|POSTINSTALL] package version)
+function(pacmake_run_patch patchname type package version dir)
+	if(NOT patchname)
+		pacmake_log(GENERIC "pacmake_run_patch(${package}, ${version}): No patchname given. This is ok if no patch exists for the package.")
+		return()
+	endif()
+
+	include("${PACMAKE_BASEDIR}/patch/${patchname}.cmake")
+	
+	pacmake_log(INFO "pacmake_run_patch(${package}, ${version}): Running ${type} patch(${patchname})...")
+		
+	if("${type}" STREQUAL "PRECONFIGURE")
+		pacmake_patch_preconfigure(${package} ${version} ${dir})
+	elseif("${type}" STREQUAL "PREBUILD")
+		pacmake_patch_prebuild(${package} ${version} ${dir})
+	elseif("${type}" STREQUAL "POSTBUILD")
+		pacmake_patch_postbuild(${package} ${version} ${dir})
+	elseif("${type}" STREQUAL "POSTINSTALL")
+		pacmake_patch_postinstall(${package} ${version} ${dir})
+	else()
+		pacmake_log(ERROR "pacmake_run_patch(${patchname}, ${package}, ${version}): Unknown patch type: ${type}")
+		message(FATAL_ERROR)
+	endif()
+endfunction(pacmake_run_patch)

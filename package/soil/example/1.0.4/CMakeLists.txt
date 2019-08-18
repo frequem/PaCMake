@@ -4,7 +4,7 @@ include("../../../../PaCMake.cmake")
 
 project(soil_example C CXX)
 
-pacmake_add_package(SOIL STATIC VERSION 1.0.4)
+pacmake_add_package(soil VERSION 1.0.4)
 
 add_executable(${PROJECT_NAME} "main.c")
-target_link_libraries(${PROJECT_NAME} PUBLIC soil)
+target_link_libraries(${PROJECT_NAME} PUBLIC soil::soil)
