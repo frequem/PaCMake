@@ -25,6 +25,7 @@ function(pacmake_add_package)
 	endif()
 	
 	if(NOT args_TYPE)
+		pacmake_log(WARNING "pacmake_add_package(${args_NAME}): No library type specified, using default(${PACMAKE_DEFAULT_LIBRARY_TYPE}).")
 		set(args_TYPE ${PACMAKE_DEFAULT_LIBRARY_TYPE})
 	endif()
 	

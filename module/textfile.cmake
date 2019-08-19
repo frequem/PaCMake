@@ -1,8 +1,24 @@
 pacmake_include(log)
+pacmake_include(parse_args)
+
+function(pacmake_textfile_read file out_data)
+	file(READ "${file}" contents)
+	string(REPLACE ";" "@@@___SEMICOLON___@@@" contents "${contents}")
+	set(${out_data} ${contents} PARENT_SCOPE)
+endfunction(pacmake_textfile_read)
+
+function(pacmake_textfile_write)
+	pacmake_parse_args(file VALUES ${ARGV})
+	string(REPLACE ";" "" contents "${PACMAKE_UNUSED_ARGS}")
+	string(REPLACE "@@@___SEMICOLON___@@@" ";" contents "${contents}")
+	file(WRITE "${file}" "${contents}")
+endfunction(pacmake_textfile_write)
 
 #pacmake_textfilefile_insert(file line data)
-function(pacmake_textfile_insert file line data)
-	file(READ "${file}" contents)
+function(pacmake_textfile_insert)
+	pacmake_parse_args(file line VALUES ${ARGV})
+	
+	pacmake_textfile_read("${file}" contents)
 	string(REGEX MATCHALL "(([^\n]*)\n)|([^\n]+)" contents_list "${contents}")
 	
 	list(LENGTH contents_list len)
@@ -12,14 +28,14 @@ function(pacmake_textfile_insert file line data)
 		set(line 0)
 	endif()
 		
-	list(INSERT contents_list ${line} ${data})
+	list(INSERT contents_list ${line} ${PACMAKE_UNUSED_ARGS})
 	
-	file(WRITE "${file}" ${contents_list})	
+	pacmake_textfile_write("${file}" ${contents_list})	
 endfunction(pacmake_textfile_insert)
 
 #pacmake_textfile_remove(file line linecount)
 function(pacmake_textfile_remove file line count)
-	file(READ "${file}" contents)
+	pacmake_textfile_read("${file}" contents)
 	string(REGEX MATCHALL "(([^\n]*)\n)|([^\n]+)" contents_list "${contents}")
 	
 	list(LENGTH contents_list len)
@@ -39,12 +55,12 @@ function(pacmake_textfile_remove file line count)
 		math(EXPR i "${i}+1")
 	endwhile()	
 	
-	file(WRITE "${file}" ${contents_list})
+	pacmake_textfile_write("${file}" ${contents_list})
 endfunction(pacmake_textfile_remove)
 
 #pacmake_textfile_replace(file orig replace)
 function(pacmake_textfile_replace file orig replace)
-	file(READ "${file}" contents)
+	pacmake_textfile_read("${file}" contents)
 	string(REPLACE "${orig}" "${replace}" contents "${contents}")
-	file(WRITE "${file}" "${contents}")
+	pacmake_textfile_write("${file}" "${contents}")
 endfunction(pacmake_textfile_replace)

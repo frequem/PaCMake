@@ -17,6 +17,12 @@ function(pacmake_parse_args)
 		math(EXPR j "${val_idx}+${i}+1")
 	endwhile()
 	
+	while(${i} LESS ${val_idx})
+		list(GET ARGV ${i} key)
+		set(${key} "" PARENT_SCOPE)
+		math(EXPR i "${i}+1")
+	endwhile()
+	
 	set(unused_args "")
 	while(${j} LESS ${ARGC})
 		list(GET ARGV ${j} arg)

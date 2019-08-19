@@ -2,10 +2,13 @@ pacmake_include(log)
 pacmake_include(textfile)
 
 function(pacmake_patch_preconfigure package version dir)
-	if(NOT EXISTS "${dir}/patched")
-		pacmake_textfile_remove("${dir}/source/CMakeLists.txt" 187 5)#remove harfbuzz
-		file(WRITE "${dir}/patched" "ok")
-	endif()
+	#remove harfbuzz find_package
+	pacmake_textfile_insert("${dir}/source/CMakeLists.txt" 410
+		"if(NOT MSVC)\n"
+		"  target_link_libraries(freetype PRIVATE m)\n"
+		"endif()\n"
+	)
+	pacmake_textfile_remove("${dir}/source/CMakeLists.txt" 187 5)
 endfunction(pacmake_patch_preconfigure)
 
 function(pacmake_patch_prebuild package version dir)

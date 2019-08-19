@@ -27,6 +27,7 @@ function(pacmake_build_package name version dir type)
 		"-DCMAKE_INSTALL_PREFIX=${dir}/install/"
 		"-DCMAKE_PREFIX_PATH=${dep_prefixes}"
 		"-DBUILD_SHARED_LIBS=${build_shared}"
+		"-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
 		${cmake_args}
 		WORKING_DIRECTORY "${dir}"
 		RESULT_VARIABLE result
