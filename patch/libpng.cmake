@@ -18,6 +18,7 @@ function(pacmake_patch_preconfigure package version dir)
 	pacmake_textfile_insert("${dir}/source/CMakeLists.txt" 29 "#")
 	
 	pacmake_textfile_replace("${dir}/source/CMakeLists.txt" "png_static" "png")
+	pacmake_textfile_replace("${dir}/source/CMakeLists.txt" "target_link_libraries(png " "target_link_libraries(png PRIVATE ")
 endfunction(pacmake_patch_preconfigure)
 
 function(pacmake_patch_prebuild package version dir)

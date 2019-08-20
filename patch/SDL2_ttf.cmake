@@ -2,6 +2,7 @@ pacmake_include(log)
 pacmake_include(textfile)
 
 function(pacmake_patch_preconfigure package version dir)
+	pacmake_textfile_replace("${dir}/source/CMakeLists.txt" "target_link_libraries(SDL2_ttf " "target_link_libraries(SDL2_ttf PUBLIC ")
 endfunction(pacmake_patch_preconfigure)
 
 function(pacmake_patch_prebuild package version dir)
