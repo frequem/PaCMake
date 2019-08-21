@@ -9,8 +9,8 @@ function(pacmake_patch_preconfigure package version dir)
 		"endif()\n"
 	)
 	pacmake_textfile_remove("${dir}/source/CMakeLists.txt" 205 5)#remove bzip2, TODO: add bzip2 package
-	pacmake_textfile_remove("${dir}/source/CMakeLists.txt" 187 5)#remove harfbuzz
 	
+	pacmake_textfile_replace("${dir}/source/CMakeLists.txt" "find_package(HarfBuzz 1.3.0" "find_package(harfbuzz")
 	pacmake_textfile_replace("${dir}/source/CMakeLists.txt" "find_package(PNG" "find_package(libpng")
 	pacmake_textfile_replace("${dir}/source/CMakeLists.txt" "find_package(ZLIB" "find_package(zlib")
 endfunction(pacmake_patch_preconfigure)
