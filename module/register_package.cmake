@@ -8,7 +8,7 @@ function(pacmake_register_package args_NAME)
 	cmake_parse_arguments(
         args
         ""
-        "PATCH;VERSION;URL_HASH;HTTP_USERNAME;HTTP_PASSWORD;GIT_REPOSITORY;GIT_TAG;SVN_REPOSITORY;SVN_REVISION;SVN_USERNAME;SVN_PASSWORD;HG_REPOSITORY;HG_TAG;CVS_REPOSITORY;CVS_MODULE;CVS_TAG"
+        "VERSION;URL_HASH;HTTP_USERNAME;HTTP_PASSWORD;GIT_REPOSITORY;GIT_TAG;SVN_REPOSITORY;SVN_REVISION;SVN_USERNAME;SVN_PASSWORD;HG_REPOSITORY;HG_TAG;CVS_REPOSITORY;CVS_MODULE;CVS_TAG"
         "URL;HTTP_HEADER;DEPENDENCIES;CMAKE_ARGS"
         ${ARGN}
     )
@@ -28,8 +28,9 @@ function(pacmake_register_package args_NAME)
 		set(PACMAKE_PACKAGE_LIST ${PACMAKE_PACKAGE_LIST} CACHE INTERNAL "PACMAKE_PACKAGE_LIST")
 	endif()
 	
+	pacmake_set_package_property(${args_NAME} ${args_VERSION} REGISTERED GENERIC TRUE)
+	
 	pacmake_set_package_property(${args_NAME} ${args_VERSION} DEPENDENCIES GENERIC "${args_DEPENDENCIES}")
-	pacmake_set_package_property(${args_NAME} ${args_VERSION} PATCH GENERIC "${args_PATCH}")
 	pacmake_set_package_property(${args_NAME} ${args_VERSION} CMAKE_ARGS GENERIC "${args_CMAKE_ARGS}")
 		
 	pacmake_set_package_property(${args_NAME} ${args_VERSION} URL DOWNLOAD "${args_URL}")

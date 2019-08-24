@@ -9,5 +9,4 @@ pacmake_register_package(
 	URL "https://www.libsdl.org/release/SDL2-2.0.10.tar.gz"
 	URL_HASH "SHA256=b4656c13a1f0d0023ae2f4a9cf08ec92fffb464e0f24238337784159b8b91d57"
 	CMAKE_ARGS "-DSDL_STATIC_PIC=ON"
-	PATCH SDL2
 )

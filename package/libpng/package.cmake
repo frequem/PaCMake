@@ -10,5 +10,4 @@ pacmake_register_package(
 	URL_HASH "SHA256=daeb2620d829575513e35fecc83f0d3791a620b9b93d800b763542ece9390fb4"
 	DEPENDENCIES zlib
 	CMAKE_ARGS "-DPNG_TESTS=OFF"
-	PATCH libpng
 )

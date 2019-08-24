@@ -13,6 +13,3 @@ function(pacmake_include MODULE)
 endfunction(pacmake_include)
 
 pacmake_include(add_package)
-pacmake_include(scan_packages)
-
-pacmake_scan_packages()

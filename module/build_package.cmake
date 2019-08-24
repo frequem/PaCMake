@@ -3,7 +3,6 @@ pacmake_include(patch)
 
 #pacmake_build_package(name version dir [STATIC|SHARED])
 function(pacmake_build_package name version dir type)
-	pacmake_get_package_property(${name} ${version} PATCH patch)
 	pacmake_get_package_property(${name} ${version} DEPENDENCY_PREFIX_PATH dep_prefixes)
 	pacmake_get_package_property(${name} ${version} CMAKE_ARGS cmake_args)
 	
@@ -15,7 +14,7 @@ function(pacmake_build_package name version dir type)
 		pacmake_log(ERROR "pacmake_build_package(${name}, ${version}): Unknown library type: ${type}")
 		message(FATAL_ERROR)
 	endif()
-	pacmake_run_patch("${patch}" PRECONFIGURE ${name} ${version} ${dir})
+	pacmake_run_patch(${name} ${version} PRECONFIGURE ${dir})
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Configuring...")
 	execute_process(
@@ -38,7 +37,7 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch("${patch}" PREBUILD ${name} ${version} ${dir})
+	pacmake_run_patch(${name} ${version} PREBUILD ${dir})
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Building...")
 	execute_process(
@@ -51,7 +50,7 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch("${patch}" POSTBUILD ${name} ${version} ${dir})
+	pacmake_run_patch(${name} ${version} POSTBUILD ${dir})
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Installing...")
 	execute_process(
@@ -64,5 +63,5 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch("${patch}" POSTINSTALL ${name} ${version} ${dir})
+	pacmake_run_patch(${name} ${version} POSTINSTALL ${dir})
 endfunction(pacmake_build_package)

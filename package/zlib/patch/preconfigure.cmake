@@ -1,19 +1,19 @@
 pacmake_include(log)
 pacmake_include(textfile)
 
-function(pacmake_patch_preconfigure package version dir)
-	file(WRITE "${dir}/source/zlibConfig.cmake"
+function(pacmake_patch patchdir workdir package version)
+	file(WRITE "${workdir}/source/zlibConfig.cmake"
 		"include(\"\${CMAKE_CURRENT_LIST_DIR}/zlibTargets.cmake\")"
 	)
 	#change target name from zlib::zlibstatic to zlib::zlib
-	pacmake_textfile_replace("${dir}/source/CMakeLists.txt" "zlibstatic" "zlib")
-	pacmake_textfile_insert("${dir}/source/CMakeLists.txt" 204 "   set_target_properties(zlib PROPERTIES OUTPUT_NAME z)\n")
-	pacmake_textfile_insert("${dir}/source/CMakeLists.txt" 203 "#")
-	pacmake_textfile_insert("${dir}/source/CMakeLists.txt" 187 "endif()\n")
-	pacmake_textfile_insert("${dir}/source/CMakeLists.txt" 186 "else()\n    ")
-	pacmake_textfile_insert("${dir}/source/CMakeLists.txt" 185 "if(BUILD_SHARED_LIBS)\n    ")
+	pacmake_textfile_replace("${workdir}/source/CMakeLists.txt" "zlibstatic" "zlib")
+	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 204 "   set_target_properties(zlib PROPERTIES OUTPUT_NAME z)\n")
+	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 203 "#")
+	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 187 "endif()\n")
+	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 186 "else()\n    ")
+	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 185 "if(BUILD_SHARED_LIBS)\n    ")
 	
-	file(APPEND "${dir}/source/CMakeLists.txt"
+	file(APPEND "${workdir}/source/CMakeLists.txt"
 		"install(TARGETS zlib\n"
 		"\tEXPORT \"\${PROJECT_NAME}Targets\"\n"
 		"\tRUNTIME DESTINATION \"\${INSTALL_BIN_DIR}\"\n"
@@ -41,13 +41,4 @@ function(pacmake_patch_preconfigure package version dir)
 		"\tDESTINATION \"\${INSTALL_LIB_DIR}/cmake/\${PROJECT_NAME}\"\n"
 		")"
 	)
-endfunction(pacmake_patch_preconfigure)
-
-function(pacmake_patch_prebuild package version dir)
-endfunction(pacmake_patch_prebuild)
-
-function(pacmake_patch_postbuild package version dir)
-endfunction(pacmake_patch_postbuild)
-
-function(pacmake_patch_postinstall package version dir)
-endfunction(pacmake_patch_postinstall)
+endfunction(pacmake_patch)

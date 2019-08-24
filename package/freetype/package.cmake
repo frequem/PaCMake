@@ -8,7 +8,6 @@ pacmake_register_package(
 	VERSION 2.10.1
 	URL "https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz"
 	URL_HASH "SHA256=3a60d391fd579440561bf0e7f31af2222bc610ad6ce4d9d7bd2165bca8669110"
-	DEPENDENCIES harfbuzz libpng zlib  
-	CMAKE_ARGS "-DFT_WITH_HARFBUZZ=ON" "-DFT_WITH_PNG=ON" "-DFT_WITH_ZLIB=ON"
-	PATCH freetype
+	DEPENDENCIES harfbuzz libpng zlib bzip2
+	CMAKE_ARGS "-DFT_WITH_HARFBUZZ=ON" "-DFT_WITH_PNG=ON" "-DFT_WITH_ZLIB=ON" "-DFT_WITH_BZIP2=ON"
 )

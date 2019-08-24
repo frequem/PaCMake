@@ -9,5 +9,4 @@ pacmake_register_package(
 	HG_REPOSITORY "https://hg.libsdl.org/SDL_ttf/"
 	HG_TAG "release-2.0.15"
 	DEPENDENCIES SDL2 freetype
-	PATCH SDL2_ttf
 )

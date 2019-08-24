@@ -4,7 +4,7 @@ include("../../../../PaCMake.cmake")
 
 project(sdl2_ttf_example C CXX)
 
-pacmake_add_package(SDL2_ttf SHARED VERSION 2.0.15)
+pacmake_add_package(SDL2_ttf VERSION 2.0.15)
 
 add_executable(${PROJECT_NAME} "main.cpp")
 target_link_libraries(${PROJECT_NAME} PUBLIC SDL2_ttf::SDL2_ttf)

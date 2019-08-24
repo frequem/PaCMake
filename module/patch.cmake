@@ -1,33 +1,23 @@
 pacmake_include(log)
 
 #pacmake_run_patch(patchname [PRECONFIGURE|PREBUILD|POSTBUILD|POSTINSTALL] package version)
-function(pacmake_run_patch patchname type package version dir)
-	if(NOT patchname)
-		pacmake_log(GENERIC "pacmake_run_patch(${package}, ${version}): No patchname given. This is ok if no patch exists for the package.")
+function(pacmake_run_patch package version type workdir)
+	set(patchdir "${PACMAKE_BASEDIR}/package/${package}/patch")
+	
+	if(EXISTS "${workdir}/patch.${type}")
+		pacmake_log(GENERIC "pacmake_run_patch(${package}, ${version}): ${type} patch has already been run, skipping...")
 		return()
 	endif()
 	
-	if(EXISTS "${dir}/patch.${type}")
-		pacmake_log(INFO "pacmake_run_patch(${package}, ${version}): ${type} patch(${patchname}) has already been run, skipping...")
-		return()
-	endif()
-
-	include("${PACMAKE_BASEDIR}/patch/${patchname}.cmake")
-	
-	pacmake_log(INFO "pacmake_run_patch(${package}, ${version}): Running ${type} patch(${patchname})...")
-		
-	if("${type}" STREQUAL "PRECONFIGURE")
-		pacmake_patch_preconfigure(${package} ${version} ${dir})
-	elseif("${type}" STREQUAL "PREBUILD")
-		pacmake_patch_prebuild(${package} ${version} ${dir})
-	elseif("${type}" STREQUAL "POSTBUILD")
-		pacmake_patch_postbuild(${package} ${version} ${dir})
-	elseif("${type}" STREQUAL "POSTINSTALL")
-		pacmake_patch_postinstall(${package} ${version} ${dir})
+	string(TOLOWER ${type} type_lower)
+	if(EXISTS "${patchdir}/${type_lower}.cmake")
+		pacmake_log(INFO "pacmake_run_patch(${package}, ${version}): Running ${type} patch...")
+		include("${patchdir}/${type_lower}.cmake")
+		pacmake_patch(${patchdir} ${workdir} ${package} ${version})
 	else()
-		pacmake_log(ERROR "pacmake_run_patch(${patchname}, ${package}, ${version}): Unknown patch type: ${type}")
-		message(FATAL_ERROR)
+		pacmake_log(GENERIC "pacmake_run_patch(${package}, ${version}): No ${type} patch to run.")
+		return()
 	endif()
-	
-	file(WRITE "${dir}/patch.${type}" "")
+		
+	file(WRITE "${workdir}/patch.${type}" "")
 endfunction(pacmake_run_patch)
