@@ -9,7 +9,7 @@ option(ENABLE_MUSIC_MOD_MODPLUG "ENABLE_MUSIC_MOD_MODPLUG" ON)
 find_package(SDL2 REQUIRED)
 
 if(ENABLE_MUSIC_MOD AND ENABLE_MUSIC_MOD_MODPLUG)
-	find_package(modplug REQUIRED)
+	find_package(libmodplug REQUIRED)
 endif()
 
 set(SOURCES
@@ -67,7 +67,7 @@ if(ENABLE_MUSIC_WAVE)
 endif()
 
 if(ENABLE_MUSIC_MOD AND ENABLE_MUSIC_MOD_MODPLUG)
-	target_link_libraries(${PROJECT_NAME} PRIVATE modplug::modplug)
+	target_link_libraries(${PROJECT_NAME} PRIVATE libmodplug::libmodplug)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE MUSIC_MOD_MODPLUG)
 endif()
 

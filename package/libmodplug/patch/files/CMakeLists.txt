@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 
-project(modplug VERSION @@@___VERSION___@@@)
+project(libmodplug VERSION @@@___VERSION___@@@)
 
 set(SOURCES 
 	src/libmodplug/it_defs.h

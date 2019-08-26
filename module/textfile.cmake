@@ -4,12 +4,18 @@ pacmake_include(parse_args)
 function(pacmake_textfile_read file out_data)
 	file(READ "${file}" contents)
 	string(REPLACE ";" "@@@___SEMICOLON___@@@" contents "${contents}")
+	string(REPLACE "[" "@@@___SQUARE_BRACKET_OPEN___@@@" contents "${contents}")
+	string(REPLACE "]" "@@@___SQUARE_BRACKET_CLOSE___@@@" contents "${contents}")
 	set(${out_data} ${contents} PARENT_SCOPE)
+	
+	
 endfunction(pacmake_textfile_read)
 
 function(pacmake_textfile_write)
 	pacmake_parse_args(file VALUES ${ARGV})
 	string(REPLACE ";" "" contents "${PACMAKE_UNUSED_ARGS}")
+	string(REPLACE "@@@___SQUARE_BRACKET_CLOSE___@@@" "]" contents "${contents}")
+	string(REPLACE "@@@___SQUARE_BRACKET_OPEN___@@@" "[" contents "${contents}")
 	string(REPLACE "@@@___SEMICOLON___@@@" ";" contents "${contents}")
 	file(WRITE "${file}" "${contents}")
 endfunction(pacmake_textfile_write)
