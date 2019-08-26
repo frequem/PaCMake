@@ -15,13 +15,13 @@ int main(int argc, char **argv) {
 	printf("MIX_INIT_MP3....%s\n", (init&MIX_INIT_MP3)?"success":"error");
 	printf("MIX_INIT_OGG....%s\n", (init&MIX_INIT_OGG)?"success":"error");
 	
-	
+	/*
 	if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024)==-1){
 		printf("Mix_OpenAudio error\n");
 		return 1;
     }
 	
-	Mix_Music *mus = Mix_LoadMUS("megalovania.mid");
+	Mix_Music *mus = Mix_LoadMUS("test.xm");
 	if(mus == nullptr){
 		printf("Mix_LoadMUS error: %s\n", Mix_GetError());
 		return 1;
@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
 	}
 	
 	Mix_FreeMusic(mus);
+	*/
 	Mix_Quit();
 	SDL_Quit();
 	return 0;

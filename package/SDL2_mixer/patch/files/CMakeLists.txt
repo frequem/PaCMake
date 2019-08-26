@@ -3,8 +3,14 @@ cmake_minimum_required(VERSION 3.0.2)
 project(SDL2_mixer VERSION @@@___VERSION___@@@)
 
 option(ENABLE_MUSIC_WAVE "ENABLE_MUSIC_WAVE" ON)
+option(ENABLE_MUSIC_MOD "ENABLE_MUSIC_MOD" ON)
+option(ENABLE_MUSIC_MOD_MODPLUG "ENABLE_MUSIC_MOD_MODPLUG" ON)
 
 find_package(SDL2 REQUIRED)
+
+if(ENABLE_MUSIC_MOD AND ENABLE_MUSIC_MOD_MODPLUG)
+	find_package(modplug REQUIRED)
+endif()
 
 set(SOURCES
 	effect_position.c
@@ -58,6 +64,11 @@ target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2)
 
 if(ENABLE_MUSIC_WAVE)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE MUSIC_WAV)
+endif()
+
+if(ENABLE_MUSIC_MOD AND ENABLE_MUSIC_MOD_MODPLUG)
+	target_link_libraries(${PROJECT_NAME} PRIVATE modplug::modplug)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE MUSIC_MOD_MODPLUG)
 endif()
 
 include(CMakePackageConfigHelpers)
