@@ -1,6 +1,6 @@
 pacmake_include(log)
 pacmake_include(textfile)
 
-function(pacmake_patch patchdir workdir package version)
-	file(RENAME "${workdir}/install/lib/libpng/libpng.cmake" "${workdir}/install/lib/libpng/libpngConfig.cmake")
+function(pacmake_patch patchdir installdir package version)
+	file(RENAME "${installdir}/lib/libpng/libpng.cmake" "${installdir}/lib/libpng/libpngConfig.cmake")
 endfunction(pacmake_patch)

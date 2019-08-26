@@ -1,6 +1,6 @@
 pacmake_include(log)
 
-#pacmake_run_patch(patchname [PRECONFIGURE|PREBUILD|POSTBUILD|POSTINSTALL] package version)
+#pacmake_run_patch(patchname version [PRECONFIGURE|PREBUILD|POSTBUILD|POSTINSTALL] package)
 function(pacmake_run_patch package version type workdir)
 	set(patchdir "${PACMAKE_BASEDIR}/package/${package}/patch")
 	

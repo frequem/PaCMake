@@ -1,19 +1,19 @@
 pacmake_include(log)
 pacmake_include(textfile)
 
-function(pacmake_patch patchdir workdir package version)
-	file(WRITE "${workdir}/source/zlibConfig.cmake"
+function(pacmake_patch patchdir sourcedir package version)
+	file(WRITE "${sourcedir}/zlibConfig.cmake"
 		"include(\"\${CMAKE_CURRENT_LIST_DIR}/zlibTargets.cmake\")"
 	)
 	#change target name from zlib::zlibstatic to zlib::zlib
-	pacmake_textfile_replace("${workdir}/source/CMakeLists.txt" "zlibstatic" "zlib")
-	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 204 "   set_target_properties(zlib PROPERTIES OUTPUT_NAME z)\n")
-	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 203 "#")
-	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 187 "endif()\n")
-	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 186 "else()\n    ")
-	pacmake_textfile_insert("${workdir}/source/CMakeLists.txt" 185 "if(BUILD_SHARED_LIBS)\n    ")
+	pacmake_textfile_replace("${sourcedir}/CMakeLists.txt" "zlibstatic" "zlib")
+	pacmake_textfile_insert("${sourcedir}/CMakeLists.txt" 204 "   set_target_properties(zlib PROPERTIES OUTPUT_NAME z)\n")
+	pacmake_textfile_insert("${sourcedir}/CMakeLists.txt" 203 "#")
+	pacmake_textfile_insert("${sourcedir}/CMakeLists.txt" 187 "endif()\n")
+	pacmake_textfile_insert("${sourcedir}/CMakeLists.txt" 186 "else()\n    ")
+	pacmake_textfile_insert("${sourcedir}/CMakeLists.txt" 185 "if(BUILD_SHARED_LIBS)\n    ")
 	
-	file(APPEND "${workdir}/source/CMakeLists.txt"
+	file(APPEND "${sourcedir}/CMakeLists.txt"
 		"install(TARGETS zlib\n"
 		"\tEXPORT \"\${PROJECT_NAME}Targets\"\n"
 		"\tRUNTIME DESTINATION \"\${INSTALL_BIN_DIR}\"\n"

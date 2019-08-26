@@ -12,7 +12,7 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		message(FATAL_ERROR)
 	endif()
 	
-	set(dir "${CMAKE_BINARY_DIR}/PaCMake/download/${args_NAME}/${args_VERSION}")
+	set(dir "${PACMAKE_PACKAGE_HOME}/download/${args_NAME}/${args_VERSION}")
 	
 	file(
 		WRITE

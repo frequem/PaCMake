@@ -1,8 +1,8 @@
 pacmake_include(log)
 pacmake_include(textfile)
 
-function(pacmake_patch patchdir workdir package version)
-	file(APPEND "${workdir}/source/CMakeLists.txt"
+function(pacmake_patch patchdir sourcedir package version)
+	file(APPEND "${sourcedir}/CMakeLists.txt"
 		"install(TARGETS harfbuzz"
 		"\tEXPORT harfbuzzConfig\n"
 		"\tARCHIVE DESTINATION \${CMAKE_INSTALL_LIBDIR}\n"
@@ -16,7 +16,7 @@ function(pacmake_patch patchdir workdir package version)
 		"\tDESTINATION \${CMAKE_INSTALL_LIBDIR}/cmake/harfbuzz\n"
 		")"
 	)
-	pacmake_textfile_replace("${workdir}/source/CMakeLists.txt"
+	pacmake_textfile_replace("${sourcedir}/CMakeLists.txt"
 		"enable_testing()"
 		"if(NOT MSVC)\n\tlist(APPEND THIRD_PARTY_LIBS m)\nendif()"
 	)

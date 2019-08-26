@@ -87,7 +87,7 @@ function(pacmake_add_package)
 	pacmake_download_package(${args_NAME} ${args_VERSION} dir)
 	pacmake_build_package(${args_NAME} ${args_VERSION} ${dir} ${args_TYPE})
 	
-	set(package_path "${dir}/install")
+	set(package_path "${dir}/install/${args_TYPE}")
 	list(APPEND CMAKE_PREFIX_PATH ${package_path})
 	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} CACHE INTERNAL "CMAKE_PREFIX_PATH")
 	pacmake_set_package_property(${args_NAME} ${args_VERSION} INSTALL_PATH GENERIC "${package_path}")

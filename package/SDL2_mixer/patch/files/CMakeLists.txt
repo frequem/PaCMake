@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 
 project(SDL2_mixer VERSION @@@___VERSION___@@@)
 
-option(ENABLE_MUSIC_MIDI_TIMIDITY "Enable MIDI (timidity)" ON)
-option(ENABLE_MUSIC_MIDI_NATIVE "Enable MIDI (native)" ON)
+option(ENABLE_MUSIC_WAVE "ENABLE_MUSIC_WAVE" ON)
 
 find_package(SDL2 REQUIRED)
 
@@ -50,52 +49,16 @@ set(HEADERS
 	music_wav.h
 )
 
-
-if(ENABLE_MUSIC_MIDI_TIMIDITY)
-	set(TIMIDITY_SOURCES
-		timidity/common.c
-		timidity/mix.c
-		timidity/playmidi.c
-		timidity/resample.c
-		timidity/timidity.c
-		timidity/instrum.c
-		timidity/output.c
-		timidity/readmidi.c
-		timidity/tables.c
-	)
-	set(TIMIDITY_HEADERS
-		timidity/common.h
-		timidity/mix.h
-		timidity/output.h
-		timidity/readmidi.h
-		timidity/tables.h
-		timidity/instrum.h
-		timidity/options.h
-		timidity/playmidi.h
-		timidity/resample.h
-		timidity/timidity.h
-	)
-endif()
-
-if(ENABLE_MUSIC_MIDI_NATIVE)
-	set(NATIVE_MIDI_SOURCES
-		native_midi/native_midi_common.c
-		native_midi/native_midi_mac.c
-		native_midi/native_midi_macosx.c
-		native_midi/native_midi_win32.c
-		native_midi/native_midi_haiku.cpp
-	)
-	set(NATIVE_MIDI_HEADERS
-		native_midi/native_midi.h
-		native_midi/native_midi_common.h
-	)
-endif()
-
 include(GNUInstallDirs)
 
 add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2)
 target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SDL2>)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2)
+
+if(ENABLE_MUSIC_WAVE)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE MUSIC_WAV)
+endif()
 
 include(CMakePackageConfigHelpers)
 
