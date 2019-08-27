@@ -5,11 +5,15 @@ project(SDL2_mixer VERSION @@@___VERSION___@@@)
 option(ENABLE_MUSIC_WAVE "ENABLE_MUSIC_WAVE" ON)
 option(ENABLE_MUSIC_MOD "ENABLE_MUSIC_MOD" ON)
 option(ENABLE_MUSIC_MOD_MODPLUG "ENABLE_MUSIC_MOD_MODPLUG" ON)
+option(ENABLE_MUSIC_OGG "ENABLE_MUSIC_OGG" ON)
 
 find_package(SDL2 REQUIRED)
 
 if(ENABLE_MUSIC_MOD AND ENABLE_MUSIC_MOD_MODPLUG)
 	find_package(libmodplug REQUIRED)
+endif()
+if(ENABLE_MUSIC_OGG)
+	find_package(vorbis REQUIRED)
 endif()
 
 set(SOURCES
@@ -65,10 +69,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2)
 if(ENABLE_MUSIC_WAVE)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE MUSIC_WAV)
 endif()
-
 if(ENABLE_MUSIC_MOD AND ENABLE_MUSIC_MOD_MODPLUG)
 	target_link_libraries(${PROJECT_NAME} PRIVATE libmodplug::libmodplug)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE MUSIC_MOD_MODPLUG)
+endif()
+if(ENABLE_MUSIC_OGG)
+	target_link_libraries(${PROJECT_NAME} PRIVATE vorbis::vorbisfile)
+	target_link_libraries(${PROJECT_NAME} PRIVATE vorbis::vorbis)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE MUSIC_OGG)
 endif()
 
 include(CMakePackageConfigHelpers)

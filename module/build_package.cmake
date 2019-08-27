@@ -19,7 +19,7 @@ function(pacmake_build_package name version dir type)
 	set(build_dir "${dir}/build")
 	set(install_dir "${dir}/install/${type}")
 	
-	pacmake_run_patch(${name} ${version} PRECONFIGURE ${source_dir})
+	pacmake_run_patch(${name} ${version} PRECONFIGURE ${dir} ${source_dir})
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Configuring...")
 	execute_process(
@@ -42,7 +42,7 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch(${name} ${version} PREBUILD ${source_dir})
+	pacmake_run_patch(${name} ${version} PREBUILD ${dir} ${source_dir})
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Building...")
 	execute_process(
@@ -55,7 +55,7 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch(${name} ${version} POSTBUILD ${build_dir})
+	pacmake_run_patch(${name} ${version} POSTBUILD ${dir} ${build_dir})
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Installing...")
 	execute_process(
@@ -68,5 +68,5 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch(${name} ${version} POSTINSTALL ${install_dir})
+	pacmake_run_patch(${name} ${version} POSTINSTALL ${dir} ${install_dir})
 endfunction(pacmake_build_package)
