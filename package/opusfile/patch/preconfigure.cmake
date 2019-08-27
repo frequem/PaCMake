@@ -4,10 +4,8 @@ pacmake_include(textfile)
 function(pacmake_patch patchdir sourcedir package version)
 	file(WRITE "${sourcedir}/${package}Config.cmake"
 		"include(CMakeFindDependencyMacro)\n"
-		"find_dependency(SDL2)\n"
-		"find_dependency(libmodplug)\n"
-		"find_dependency(vorbis)\n"
-		"find_dependency(opusfile)\n"
+		"find_dependency(Opus)\n"
+		"find_dependency(libogg)\n"
 		"include(\"\${CMAKE_CURRENT_LIST_DIR}/${package}Targets.cmake\")\n"
 	)
 	
