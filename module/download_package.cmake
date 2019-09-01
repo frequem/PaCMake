@@ -3,7 +3,14 @@ pacmake_include(log)
 
 #pacmake_download_package(name version out_dir)
 function(pacmake_download_package args_NAME args_VERSION out_dir)
-	pacmake_log(INFO "Fetching ${args_NAME}(${args_VERSION})...")
+	set(dir "${PACMAKE_PACKAGE_HOME}/download/${args_NAME}/${args_VERSION}")
+	set(${out_dir} "${dir}" PARENT_SCOPE)
+	if(EXISTS "${dir}/download.DONE")
+		pacmake_log(INFO "${args_NAME}(${args_VERSION}) sources exist, skipping download...")
+		return()
+	endif()
+		
+	pacmake_log(INFO "Downloading ${args_NAME}(${args_VERSION})...")
 	
 	pacmake_get_download_properties(${args_NAME} ${args_VERSION} prop_list)
 	
@@ -11,9 +18,7 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): No properties found. Does the package exist and is the version correct?")
 		message(FATAL_ERROR)
 	endif()
-	
-	set(dir "${PACMAKE_PACKAGE_HOME}/download/${args_NAME}/${args_VERSION}")
-	
+		
 	file(
 		WRITE
 		"${dir}/CMakeLists.txt"
@@ -29,13 +34,26 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		"\tINSTALL_COMMAND \"\"\n"
 		"${prop_list}"
 		")\n"
-	)
+	)	
+	if(ANDROID)
+		set(android_params
+			"-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
+			"-DANDROID_NDK=${ANDROID_NDK}"
+			"-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
+			"-DCMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}"
+			"-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+			"-DANDROID_TOOLCHAIN_NAME=${ANDROID_TOOLCHAIN_NAME}"
+		)
+	endif()
 	execute_process(
 		COMMAND ${CMAKE_COMMAND}
 		"-H${dir}"
 		"-B${dir}/prebuild"
 		"-G${CMAKE_GENERATOR}"
 		"-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+		"-DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}"
+		"-DCMAKE_SYSTEM_VERSION=${CMAKE_SYSTEM_VERSION}"
+		${android_params}
 		WORKING_DIRECTORY "${dir}"
 		RESULT_VARIABLE result
 	)
@@ -52,5 +70,5 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): Could not download sources.")
 		message(FATAL_ERROR)
 	endif()
-	set(${out_dir} "${dir}" PARENT_SCOPE)
+	file(WRITE "${dir}/download.DONE" "")
 endfunction(pacmake_download_package)
