@@ -26,19 +26,34 @@ function(pacmake_build_package name version dir type)
 	set(source_dir "${dir}/source")
 	set(build_dir "${dir}/build/${system_prefix}")
 	set(install_dir "${dir}/install/${system_prefix}/${type}")
+	set(patch_check_dir "${dir}/patch")
 	
-	pacmake_run_patch(${name} ${version} PRECONFIGURE ${dir} ${source_dir})
+	#create build to dir for execute_process output
+	if(NOT EXISTS ${build_dir})
+		file(MAKE_DIRECTORY ${build_dir})
+	endif()
+	
+	pacmake_run_patch(${name} ${version} PRECONFIGURE ${source_dir} ${patch_check_dir})
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Configuring...")
 	
 	if(ANDROID)
 		set(android_params
+			"-DANDROID_TOOLCHAIN=${ANDROID_TOOLCHAIN}"
+			"-DANDROID_ABI=${ANDROID_ABI}"
 			"-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
+			"-DANDROID_STL=${ANDROID_STL}"
+			"-DANDROID_PIE=${ANDROID_PIE}"
+			"-DANDROID_CPP_FEATURES=${ANDROID_CPP_FEATURES}"
+			"-DANDROID_ALLOW_UNDEFINED_SYMBOLS=${ANDROID_ALLOW_UNDEFINED_SYMBOLS}"
+			"-DANDROID_ARM_MODE=${ANDROID_ARM_MODE}"
+			"-DANDROID_ARM_NEON=${ANDROID_ARM_NEON}"
+			"-DANDROID_DISABLE_FORMAT_STRING_CHECKS=${ANDROID_DISABLE_FORMAT_STRING_CHECKS}"
+			"-DANDROID_CCACHE=${ANDROID_CCACHE}"
 			"-DANDROID_NDK=${ANDROID_NDK}"
-			"-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
-			"-DCMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}"
-			"-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
 			"-DANDROID_TOOLCHAIN_NAME=${ANDROID_TOOLCHAIN_NAME}"
+			"-DANDROID_NATIVE_API_LEVEL=${ANDROID_NATIVE_API_LEVEL}"
+			"-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
 		)
 	endif()
 	
@@ -51,6 +66,7 @@ function(pacmake_build_package name version dir type)
 		"-DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}"
 		"-DCMAKE_SYSTEM_VERSION=${CMAKE_SYSTEM_VERSION}"
 		"-DCMAKE_INSTALL_PREFIX=${install_dir}/"
+		"-DCMAKE_FIND_ROOT_PATH=${dep_prefixes}" #CMAKE_PREFIX_PATH doesn't work on android (CMAKE_FIND_ROOT_PATH_MODE_PACKAGE is set to ONLY)
 		"-DCMAKE_PREFIX_PATH=${dep_prefixes}"
 		"-DBUILD_SHARED_LIBS=${build_shared}"
 		"-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
@@ -58,6 +74,8 @@ function(pacmake_build_package name version dir type)
 		${android_params}
 		${cmake_args}
 		WORKING_DIRECTORY "${dir}"
+		OUTPUT_FILE "${build_dir}/pacmake_configure.log"
+		ERROR_FILE "${build_dir}/pacmake_configure.log"
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
@@ -65,12 +83,14 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch(${name} ${version} PREBUILD ${dir} ${source_dir})
+	pacmake_run_patch(${name} ${version} PREBUILD ${source_dir} ${patch_check_dir})
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Building...")
 	execute_process(
 		COMMAND "${CMAKE_COMMAND}" --build "${build_dir}/"
 		WORKING_DIRECTORY "${dir}"
+		OUTPUT_FILE "${build_dir}/pacmake_build.log"
+		ERROR_FILE "${build_dir}/pacmake_build.log"
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
@@ -78,12 +98,14 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch(${name} ${version} POSTBUILD ${dir} ${build_dir})
+	pacmake_run_patch(${name} ${version} POSTBUILD ${build_dir} "${patch_check_dir}/${system_prefix}")
 	
 	pacmake_log(INFO "pacmake_build_package(${name}, ${version}): Installing...")
 	execute_process(
 		COMMAND ${CMAKE_COMMAND} --build "." --target install
 		WORKING_DIRECTORY "${build_dir}"
+		OUTPUT_FILE "${build_dir}/pacmake_install.log"
+		ERROR_FILE "${build_dir}/pacmake_install.log"
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
@@ -91,7 +113,7 @@ function(pacmake_build_package name version dir type)
 		message(FATAL_ERROR)
 	endif()
 	
-	pacmake_run_patch(${name} ${version} POSTINSTALL ${dir} ${install_dir})
+	pacmake_run_patch(${name} ${version} POSTINSTALL ${install_dir} "${patch_check_dir}/${system_prefix}")
 	
 	#append to prefix path + set install_path
 	list(APPEND CMAKE_PREFIX_PATH ${install_dir})

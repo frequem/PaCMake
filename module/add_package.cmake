@@ -52,7 +52,7 @@ function(pacmake_add_package)
 	endif()
 		
 	if(NOT args_TYPE)
-		pacmake_log(WARNING "pacmake_add_package(${args_NAME}): No library type specified, using default(${PACMAKE_DEFAULT_LIBRARY_TYPE}).")
+		pacmake_log(INFO "pacmake_add_package(${args_NAME}): No library type specified, using default(${PACMAKE_DEFAULT_LIBRARY_TYPE}).")
 		set(args_TYPE ${PACMAKE_DEFAULT_LIBRARY_TYPE})
 	endif()
 	
@@ -69,7 +69,7 @@ function(pacmake_add_package)
 		set(prefixes ${dep_install_path} ${dep_deps_prefixes})
 		
 		pacmake_get_package_property(${args_NAME} ${args_VERSION} DEPENDENCY_PREFIX_PATH dep_prefixes)
-		foreach(prefix in ITEMS ${prefixes})
+		foreach(prefix IN ITEMS ${prefixes})
 			list(FIND dep_prefixes "${prefix}" i)
 			if(${i} LESS 0)
 				list(APPEND dep_prefixes ${prefix})

@@ -9,12 +9,14 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		pacmake_log(INFO "${args_NAME}(${args_VERSION}) sources exist, skipping download...")
 		return()
 	endif()
+	file(WRITE "${dir}/download.DONE" "")
 		
 	pacmake_log(INFO "Downloading ${args_NAME}(${args_VERSION})...")
 	
 	pacmake_get_download_properties(${args_NAME} ${args_VERSION} prop_list)
 	
 	if(NOT prop_list)
+		file(REMOVE "${dir}/download.DONE" "")
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): No properties found. Does the package exist and is the version correct?")
 		message(FATAL_ERROR)
 	endif()
@@ -37,12 +39,21 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 	)	
 	if(ANDROID)
 		set(android_params
+			"-DANDROID_TOOLCHAIN=${ANDROID_TOOLCHAIN}"
+			"-DANDROID_ABI=${ANDROID_ABI}"
 			"-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
+			"-DANDROID_STL=${ANDROID_STL}"
+			"-DANDROID_PIE=${ANDROID_PIE}"
+			"-DANDROID_CPP_FEATURES=${ANDROID_CPP_FEATURES}"
+			"-DANDROID_ALLOW_UNDEFINED_SYMBOLS=${ANDROID_ALLOW_UNDEFINED_SYMBOLS}"
+			"-DANDROID_ARM_MODE=${ANDROID_ARM_MODE}"
+			"-DANDROID_ARM_NEON=${ANDROID_ARM_NEON}"
+			"-DANDROID_DISABLE_FORMAT_STRING_CHECKS=${ANDROID_DISABLE_FORMAT_STRING_CHECKS}"
+			"-DANDROID_CCACHE=${ANDROID_CCACHE}"
 			"-DANDROID_NDK=${ANDROID_NDK}"
-			"-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
-			"-DCMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}"
-			"-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
 			"-DANDROID_TOOLCHAIN_NAME=${ANDROID_TOOLCHAIN_NAME}"
+			"-DANDROID_NATIVE_API_LEVEL=${ANDROID_NATIVE_API_LEVEL}"
+			"-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
 		)
 	endif()
 	execute_process(
@@ -55,20 +66,25 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		"-DCMAKE_SYSTEM_VERSION=${CMAKE_SYSTEM_VERSION}"
 		${android_params}
 		WORKING_DIRECTORY "${dir}"
+		OUTPUT_FILE "${dir}/pacmake_prebuild.log"
+		ERROR_FILE "${dir}/pacmake_prebuild.log"
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
+		file(REMOVE "${dir}/download.DONE" "")
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): Could not configure download.")
 		message(FATAL_ERROR)
 	endif()
 	execute_process(
 		COMMAND "${CMAKE_COMMAND}" --build "prebuild/"
 		WORKING_DIRECTORY "${dir}"
+		OUTPUT_FILE "${dir}/pacmake_download.log"
+		ERROR_FILE "${dir}/pacmake_download.log"
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
+		file(REMOVE "${dir}/download.DONE" "")
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): Could not download sources.")
 		message(FATAL_ERROR)
 	endif()
-	file(WRITE "${dir}/download.DONE" "")
 endfunction(pacmake_download_package)

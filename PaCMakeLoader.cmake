@@ -5,6 +5,8 @@ function(pacmake_download dir)
 		message("PACMAKE sources exist, skipping download...")
 		return()
 	endif()
+	file(WRITE "${dir}/download.DONE" "")
+	
 	file(
 		WRITE
 		"${dir}/CMakeLists.txt"
@@ -23,12 +25,21 @@ function(pacmake_download dir)
 	)
 	if(ANDROID)
 		set(android_params
+			"-DANDROID_TOOLCHAIN=${ANDROID_TOOLCHAIN}"
+			"-DANDROID_ABI=${ANDROID_ABI}"
 			"-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
+			"-DANDROID_STL=${ANDROID_STL}"
+			"-DANDROID_PIE=${ANDROID_PIE}"
+			"-DANDROID_CPP_FEATURES=${ANDROID_CPP_FEATURES}"
+			"-DANDROID_ALLOW_UNDEFINED_SYMBOLS=${ANDROID_ALLOW_UNDEFINED_SYMBOLS}"
+			"-DANDROID_ARM_MODE=${ANDROID_ARM_MODE}"
+			"-DANDROID_ARM_NEON=${ANDROID_ARM_NEON}"
+			"-DANDROID_DISABLE_FORMAT_STRING_CHECKS=${ANDROID_DISABLE_FORMAT_STRING_CHECKS}"
+			"-DANDROID_CCACHE=${ANDROID_CCACHE}"
 			"-DANDROID_NDK=${ANDROID_NDK}"
-			"-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
-			"-DCMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}"
-			"-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
 			"-DANDROID_TOOLCHAIN_NAME=${ANDROID_TOOLCHAIN_NAME}"
+			"-DANDROID_NATIVE_API_LEVEL=${ANDROID_NATIVE_API_LEVEL}"
+			"-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
 		)
 	endif()
 	execute_process(
@@ -44,6 +55,7 @@ function(pacmake_download dir)
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
+		file(REMOVE "${dir}/download.DONE" "")
 		message(FATAL_ERROR "PACMAKE LOADER: Could not configure PaCMake sources.")
 	endif()
 	execute_process(
@@ -52,9 +64,9 @@ function(pacmake_download dir)
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
+		file(REMOVE "${dir}/download.DONE" "")
 		message(FATAL_ERROR "PACMAKE LOADER: Could not download PaCMake sources.")
 	endif()
-	file(WRITE "${dir}/download.DONE" "")
 endfunction(pacmake_download)
 
 if(NOT PACMAKE_PACKAGE_HOME)
