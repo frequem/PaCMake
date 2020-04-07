@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.0.2)
 
-option(PACMAKE_PRINT_WARNINGS "Print PacMake warnings" ON)
-option(PACMAKE_PRINT_ERRORS "Print PacMake errors" ON)
+option(PACMAKE_PRINT_WARNING "Print PacMake warnings" ON)
+option(PACMAKE_PRINT_ERROR "Print PacMake errors" ON)
 option(PACMAKE_PRINT_INFO "Print PacMake info" ON)
 option(PACMAKE_DEBUG "Print all PacMake messages" OFF)
-set(PACMAKE_DEFAULT_LIBRARY_TYPE STATIC)
+option(PACMAKE_DEFAULT_SHARED "Build shared libraries by default" OFF)
+
+if(PACMAKE_DEFAULT_SHARED)
+	set(PACMAKE_DEFAULT_LIBRARY_TYPE SHARED)
+else()
+	set(PACMAKE_DEFAULT_LIBRARY_TYPE STATIC)
+endif()
 
 set(PACMAKE_BASEDIR ${CMAKE_CURRENT_LIST_DIR} CACHE INTERNAL "PACMAKE_BASEDIR")
 

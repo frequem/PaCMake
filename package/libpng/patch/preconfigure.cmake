@@ -19,4 +19,6 @@ function(pacmake_patch patchdir sourcedir package version)
 	
 	pacmake_textfile_replace("${sourcedir}/CMakeLists.txt" "png_static" "png")
 	pacmake_textfile_replace("${sourcedir}/CMakeLists.txt" "target_link_libraries(png " "target_link_libraries(png PRIVATE ")
+	
+	pacmake_textfile_remove("${sourcedir}/CMakeLists.txt" 751 9) #remove pngfix
 endfunction(pacmake_patch)

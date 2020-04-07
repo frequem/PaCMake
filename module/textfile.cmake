@@ -1,19 +1,17 @@
 pacmake_include(log)
-pacmake_include(parse_args)
 
+#pacmake_textfilefile_write(file out_data)
 function(pacmake_textfile_read file out_data)
 	file(READ "${file}" contents)
 	string(REPLACE ";" "@@@___SEMICOLON___@@@" contents "${contents}")
 	string(REPLACE "[" "@@@___SQUARE_BRACKET_OPEN___@@@" contents "${contents}")
 	string(REPLACE "]" "@@@___SQUARE_BRACKET_CLOSE___@@@" contents "${contents}")
 	set(${out_data} ${contents} PARENT_SCOPE)
-	
-	
 endfunction(pacmake_textfile_read)
 
-function(pacmake_textfile_write)
-	pacmake_parse_args(file VALUES ${ARGV})
-	string(REPLACE ";" "" contents "${PACMAKE_UNUSED_ARGS}")
+#pacmake_textfilefile_write(file contents)
+function(pacmake_textfile_write file)
+	string(REPLACE ";" "" contents "${ARGN}")
 	string(REPLACE "@@@___SQUARE_BRACKET_CLOSE___@@@" "]" contents "${contents}")
 	string(REPLACE "@@@___SQUARE_BRACKET_OPEN___@@@" "[" contents "${contents}")
 	string(REPLACE "@@@___SEMICOLON___@@@" ";" contents "${contents}")
@@ -21,9 +19,7 @@ function(pacmake_textfile_write)
 endfunction(pacmake_textfile_write)
 
 #pacmake_textfilefile_insert(file line data)
-function(pacmake_textfile_insert)
-	pacmake_parse_args(file line VALUES ${ARGV})
-	
+function(pacmake_textfile_insert file line)
 	pacmake_textfile_read("${file}" contents)
 	string(REGEX MATCHALL "(([^\n]*)\n)|([^\n]+)" contents_list "${contents}")
 	
@@ -34,7 +30,7 @@ function(pacmake_textfile_insert)
 		set(line 0)
 	endif()
 		
-	list(INSERT contents_list ${line} ${PACMAKE_UNUSED_ARGS})
+	list(INSERT contents_list ${line} ${ARGN})
 	
 	pacmake_textfile_write("${file}" ${contents_list})	
 endfunction(pacmake_textfile_insert)

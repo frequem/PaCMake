@@ -6,18 +6,18 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 	set(dir "${PACMAKE_PACKAGE_HOME}/download/${args_NAME}/${args_VERSION}")
 	set(${out_dir} "${dir}" PARENT_SCOPE)
 	if(EXISTS "${dir}/download.DONE")
-		pacmake_log(INFO "${args_NAME}(${args_VERSION}) sources exist, skipping download...")
+		pacmake_log(INFO "pacmake_download_package(${args_NAME}, ${args_VERSION}): Sources exist, skipping download.")
 		return()
 	endif()
 	file(WRITE "${dir}/download.DONE" "")
 		
-	pacmake_log(INFO "Downloading ${args_NAME}(${args_VERSION})...")
+	pacmake_log(INFO "pacmake_download_package(${args_NAME}, ${args_VERSION}): Downloading sources.")
 	
-	pacmake_get_download_properties(${args_NAME} ${args_VERSION} prop_list)
+	pacmake_get_package_properties(DOWNLOAD ${args_NAME} ${args_VERSION} prop_list)
 	
 	if(NOT prop_list)
 		file(REMOVE "${dir}/download.DONE" "")
-		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): No properties found. Does the package exist and is the version correct?")
+		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): No properties found. Are the package and version correct?")
 		message(FATAL_ERROR)
 	endif()
 		
@@ -36,7 +36,8 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		"\tINSTALL_COMMAND \"\"\n"
 		"${prop_list}"
 		")\n"
-	)	
+	)
+	
 	if(ANDROID)
 		set(android_params
 			"-DANDROID_TOOLCHAIN=${ANDROID_TOOLCHAIN}"
@@ -56,6 +57,7 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 			"-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
 		)
 	endif()
+	
 	execute_process(
 		COMMAND ${CMAKE_COMMAND}
 		"-H${dir}"
@@ -75,6 +77,7 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): Could not configure download.")
 		message(FATAL_ERROR)
 	endif()
+	
 	execute_process(
 		COMMAND "${CMAKE_COMMAND}" --build "prebuild/"
 		WORKING_DIRECTORY "${dir}"
