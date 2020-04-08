@@ -21,4 +21,8 @@ function(pacmake_patch patchdir sourcedir package version)
 	pacmake_textfile_replace("${sourcedir}/CMakeLists.txt" "target_link_libraries(png " "target_link_libraries(png PRIVATE ")
 	
 	pacmake_textfile_remove("${sourcedir}/CMakeLists.txt" 751 9) #remove pngfix
+	
+	pacmake_textfile_insert("${sourcedir}/CMakeLists.txt" 43 "  find_package(zlib REQUIRED)\n")
+	pacmake_textfile_insert("${sourcedir}/CMakeLists.txt" 42 "#")
+	pacmake_textfile_replace("${sourcedir}/CMakeLists.txt" "\${ZLIB_LIBRARY}" "zlib::zlib")
 endfunction(pacmake_patch)
