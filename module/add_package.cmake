@@ -94,11 +94,10 @@ function(pacmake_add_package)
 	pacmake_build_package(${args_NAME} ${args_VERSION} ${dir} ${args_TYPE})
 	
 	pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} INSTALL_PATH install_path)
-	pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} DEPENDENCY_PREFIX_PATH dep_prefixes)
 	
 	pacmake_log(INFO "pacmake_add_package(${args_NAME}, ${args_VERSION}): Running find_package.")
 	find_package(${args_NAME} REQUIRED 
 		NO_DEFAULT_PATH
-		PATHS ${dep_prefixes} ${install_path}
+		PATHS ${install_path}
 	)
 endfunction(pacmake_add_package)

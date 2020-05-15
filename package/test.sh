@@ -28,20 +28,34 @@ test_example(){
 	return $RESULT
 }
 
-
-for exampledir in */example/*/ ; do
-	test_example $exampledir STATIC
-	if [ $? -ne 0 ]; then
-		echo "STATIC build failed"
-		exit 1
+FAILED=()
+PASSED=()
+for package in * ; do
+	if ! [ -d "$package/example/" ] ; then #skip files
+		continue
 	fi
-	
-	test_example $exampledir SHARED
-	if [ $? -ne 0 ]; then
-		echo "SHARED build failed"
-		exit 1
-	fi
+	pushd $package/example/
+	for version in * ; do
+		if ! [ -d "$version" ] ; then
+			continue
+		fi
+		for type in "STATIC" "SHARED" ; do
+			test_example $version/ $type
+			if [ $? -ne 0 ]; then
+				FAILED+=("$package($version, $type)")
+			else
+				PASSED+=("$package($version, $type)")
+			fi
+		done
+	done
+	popd
 done
 
-echo "All good."
-exit 0
+for i in "${PASSED[@]}" ; do
+	echo -n "$i$(printf '\056%.0s' {1..48})" | head -c 48 ; echo -e "\e[32mPASSED\e[0m"
+done
+for i in "${FAILED[@]}" ; do
+	echo -n "$i$(printf '\056%.0s' {1..48})" | head -c 48 ; echo -e "\e[31mFAILED\e[0m"
+done
+
+exit ${#FAILED[@]}

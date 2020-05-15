@@ -21,4 +21,9 @@ function(pacmake_patch patchdir sourcedir package version)
 		"#define GLATTER_LOG_ERRORS"
 		"//#define GLATTER_LOG_ERRORS"
 	)
+	#fix case sensitivity when cross-compiling:
+	pacmake_textfile_replace("${sourcedir}/include/glatter/glatter_platform_headers.h" 
+		"#include <Windows.h>"
+		"#include <windows.h>"
+	)
 endfunction(pacmake_patch)

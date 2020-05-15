@@ -9,14 +9,12 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		pacmake_log(INFO "pacmake_download_package(${args_NAME}, ${args_VERSION}): Sources exist, skipping download.")
 		return()
 	endif()
-	file(WRITE "${dir}/download.DONE" "")
 		
 	pacmake_log(INFO "pacmake_download_package(${args_NAME}, ${args_VERSION}): Downloading sources.")
 	
 	pacmake_get_package_properties(DOWNLOAD ${args_NAME} ${args_VERSION} prop_list)
 	
 	if(NOT prop_list)
-		file(REMOVE "${dir}/download.DONE" "")
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): No properties found. Are the package and version correct?")
 		message(FATAL_ERROR)
 	endif()
@@ -73,7 +71,6 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
-		file(REMOVE "${dir}/download.DONE" "")
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): Could not configure download.")
 		message(FATAL_ERROR)
 	endif()
@@ -86,8 +83,9 @@ function(pacmake_download_package args_NAME args_VERSION out_dir)
 		RESULT_VARIABLE result
 	)
 	if(NOT result EQUAL 0)
-		file(REMOVE "${dir}/download.DONE" "")
 		pacmake_log(ERROR "pacmake_download_package(${args_NAME}, ${args_VERSION}): Could not download sources.")
 		message(FATAL_ERROR)
 	endif()
+	
+	file(WRITE "${dir}/download.DONE" "")
 endfunction(pacmake_download_package)
