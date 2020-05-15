@@ -3,6 +3,7 @@ pacmake_include(default_version)
 
 pacmake_set_default_version(FreeGLUT 3.2.1)
 
+#broken since GCC 10 (multiple defintions)
 pacmake_register_package(
 	FreeGLUT
 	VERSION 3.2.1
