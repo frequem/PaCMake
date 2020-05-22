@@ -2,11 +2,19 @@ pacmake_include(package_property)
 pacmake_include(log)
 pacmake_include(patch)
 
+#pacmake_find_config_path(name install_path out_config_path)
+function(pacmake_find_config_path name install_path out_config_path)
+	file(GLOB_RECURSE config_path 
+		"${install_path}/*/${name}Config.cmake"
+		"${install_path}/*/${name}-config.cmake"
+	)
+	list(GET config_path 0 config_path)
+	get_filename_component(config_path ${config_path} DIRECTORY)
+	set(${out_config_path} ${config_path} PARENT_SCOPE)
+endfunction(pacmake_find_config_path)
+
 #pacmake_build_package(name version dir [STATIC|SHARED])
-function(pacmake_build_package args_NAME args_VERSION dir args_TYPE)
-	pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} DEPENDENCY_PREFIX_PATH dep_prefixes)
-	pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} CMAKE_ARGS cmake_args)
-	
+function(pacmake_build_package args_NAME args_VERSION dir args_TYPE)	
 	if("${args_TYPE}" STREQUAL "STATIC")
 		set(build_shared OFF)
 	elseif("${args_TYPE}" STREQUAL "SHARED")
@@ -16,13 +24,7 @@ function(pacmake_build_package args_NAME args_VERSION dir args_TYPE)
 		message(FATAL_ERROR)
 	endif()
 	
-	set(system_prefix "${CMAKE_SYSTEM_NAME}")
-	if(CMAKE_SYSTEM_VERSION)
-		string(APPEND system_prefix "_${CMAKE_SYSTEM_VERSION}")
-	endif()
-	if(CMAKE_ANDROID_ARCH_ABI)
-		string(APPEND system_prefix "/${CMAKE_ANDROID_ARCH_ABI}")
-	endif()
+	set(system_prefix "${CMAKE_SYSTEM}-${CMAKE_SYSTEM_PROCESSOR}")
 	
 	set(source_dir "${dir}/source")
 	set(build_dir "${dir}/build/${system_prefix}/${args_TYPE}")
@@ -31,12 +33,10 @@ function(pacmake_build_package args_NAME args_VERSION dir args_TYPE)
 	
 	if(EXISTS ${install_dir})
 		pacmake_log(INFO "pacmake_build_package(${args_NAME}, ${args_VERSION}): Install directory exists, skipping build.")
-		
-		list(APPEND CMAKE_PREFIX_PATH ${install_dir})
-		set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} CACHE INTERNAL "CMAKE_PREFIX_PATH")
-		pacmake_set_package_property(GENERIC ${args_NAME} ${args_VERSION} INSTALL_PATH "${install_dir}")
+		pacmake_find_config_path(${args_NAME} ${install_dir} config_path)
+		pacmake_set_package_property(GENERIC ${args_NAME} ${args_VERSION} CONFIG_PATH "${config_path}")
+		set(${args_NAME}_DIR "${config_path}" CACHE INTERNAL "${args_NAME}_DIR")#for find_package
 		set(PACMAKE_PACKAGE_VERSION_${args_NAME} ${args_VERSION} CACHE INTERNAL "PACMAKE_PACKAGE_VERSION_${args_NAME}")
-		
 		return()
 	endif()
 	
@@ -47,10 +47,16 @@ function(pacmake_build_package args_NAME args_VERSION dir args_TYPE)
 	
 	pacmake_run_patch(${args_NAME} ${args_VERSION} PRECONFIGURE ${source_dir} ${patch_check_dir})
 	
+	pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} CMAKE_ARGS cmake_args)
+	
 	pacmake_log(INFO "pacmake_build_package(${args_NAME}, ${args_VERSION}): Configuring.")
 	
+	#append dependency_DIR to cmake_args (for find_package)
+	pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} CMAKE_ARGS_CONFIG_PATH config_args)
+	list(APPEND cmake_args ${config_args})
+	
 	if(ANDROID)
-		set(android_params
+		list(APPEND cmake_args
 			"-DANDROID_TOOLCHAIN=${ANDROID_TOOLCHAIN}"
 			"-DANDROID_ABI=${ANDROID_ABI}"
 			"-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
@@ -78,12 +84,9 @@ function(pacmake_build_package args_NAME args_VERSION dir args_TYPE)
 		"-DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}"
 		"-DCMAKE_SYSTEM_VERSION=${CMAKE_SYSTEM_VERSION}"
 		"-DCMAKE_INSTALL_PREFIX=${install_dir}/"
-		"-DCMAKE_FIND_ROOT_PATH=${dep_prefixes}" #CMAKE_PREFIX_PATH doesn't work on android (CMAKE_FIND_ROOT_PATH_MODE_PACKAGE is set to ONLY)
-		"-DCMAKE_PREFIX_PATH=${dep_prefixes}"
 		"-DBUILD_SHARED_LIBS=${build_shared}"
 		"-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
 		"-DCMAKE_BUILD_TYPE=Release"
-		${android_params}
 		${cmake_args}
 		WORKING_DIRECTORY "${dir}"
 		OUTPUT_FILE "${build_dir}/pacmake_configure.log"
@@ -127,9 +130,8 @@ function(pacmake_build_package args_NAME args_VERSION dir args_TYPE)
 	
 	pacmake_run_patch(${args_NAME} ${args_VERSION} POSTINSTALL ${install_dir} "${patch_check_dir}/${system_prefix}/${args_TYPE}")
 	
-	#append to prefix path + set install_path
-	list(APPEND CMAKE_PREFIX_PATH ${install_dir})
-	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} CACHE INTERNAL "CMAKE_PREFIX_PATH")
-	pacmake_set_package_property(GENERIC ${args_NAME} ${args_VERSION} INSTALL_PATH "${install_dir}")
+	pacmake_find_config_path(${args_NAME} ${install_dir} config_path)
+	pacmake_set_package_property(GENERIC ${args_NAME} ${args_VERSION} CONFIG_PATH "${config_path}")
+	set(${args_NAME}_DIR "${config_path}" CACHE INTERNAL "${args_NAME}_DIR")#for find_package
 	set(PACMAKE_PACKAGE_VERSION_${args_NAME} ${args_VERSION} CACHE INTERNAL "PACMAKE_PACKAGE_VERSION_${args_NAME}")
 endfunction(pacmake_build_package)

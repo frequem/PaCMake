@@ -72,20 +72,17 @@ function(pacmake_add_package)
 	foreach(dep IN ITEMS ${deps})
 		pacmake_log(INFO "pacmake_add_package(${args_NAME}, ${args_VERSION}): Depends on ${dep}, running pacmake_add_package.")		
 		pacmake_add_package(${dep})
-		#version should be set now
 		
-		#append dependency prefix + prefixes of dependencies of dependencies...
-		pacmake_get_package_property(GENERIC ${dep} ${PACMAKE_PACKAGE_VERSION_${dep}} INSTALL_PATH dep_install_path)
-		pacmake_get_package_property(GENERIC ${dep} ${PACMAKE_PACKAGE_VERSION_${dep}} DEPENDENCY_PREFIX_PATH dep_deps_prefixes)
+		pacmake_get_package_property(GENERIC ${dep} ${PACMAKE_PACKAGE_VERSION_${dep}} CONFIG_PATH dep_config)
+		pacmake_get_package_property(GENERIC ${dep} ${PACMAKE_PACKAGE_VERSION_${dep}} CMAKE_ARGS_CONFIG_PATH dep_config_args)
+		list(APPEND dep_config_args "-D${dep}_DIR=${dep_config}")
 		
-		set(prefixes ${dep_install_path} ${dep_deps_prefixes})
-		
-		pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} DEPENDENCY_PREFIX_PATH dep_prefixes)
-		foreach(prefix IN ITEMS ${prefixes})
-			list(FIND dep_prefixes "${prefix}" prefix_index)
-			if(${prefix_index} LESS 0) # add dependency if not added already
-				list(APPEND dep_prefixes ${prefix})
-				pacmake_set_package_property(GENERIC ${args_NAME} ${args_VERSION} DEPENDENCY_PREFIX_PATH ${dep_prefixes})
+		pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} CMAKE_ARGS_CONFIG_PATH config_args)
+		foreach(arg IN ITEMS ${dep_config_args})
+			list(FIND config_args "${arg}" prefix_index)
+			if(${prefix_index} LESS 0) # add dependency config path if not already added
+				list(APPEND config_args ${arg})
+				pacmake_set_package_property(GENERIC ${args_NAME} ${args_VERSION} CMAKE_ARGS_CONFIG_PATH ${config_args})
 			endif()
 		endforeach()
 	endforeach()
@@ -93,11 +90,6 @@ function(pacmake_add_package)
 	pacmake_download_package(${args_NAME} ${args_VERSION} dir)
 	pacmake_build_package(${args_NAME} ${args_VERSION} ${dir} ${args_TYPE})
 	
-	pacmake_get_package_property(GENERIC ${args_NAME} ${args_VERSION} INSTALL_PATH install_path)
-	
 	pacmake_log(INFO "pacmake_add_package(${args_NAME}, ${args_VERSION}): Running find_package.")
-	find_package(${args_NAME} REQUIRED 
-		NO_DEFAULT_PATH
-		PATHS ${install_path}
-	)
+	find_package(${args_NAME} REQUIRED NO_DEFAULT_PATH) #package_DIRs have already been set by build_package
 endfunction(pacmake_add_package)

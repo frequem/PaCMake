@@ -1,9 +1,11 @@
 #!/bin/bash
 #test all packages
+#usage: ./test.sh [<toolchain_file>]
 
 test_example(){
 	SOURCEDIR=$(readlink -f $1) #get absolute path
 	LIBTYPE=$2 # STATIC or SHARED
+	TOOLCHAIN=$3
 	
 	tmpdir=$(mktemp -d)
 	pushd $tmpdir
@@ -14,7 +16,7 @@ test_example(){
 		SHARED=OFF
 	fi
 	
-	cmake $SOURCEDIR -DPACMAKE_DEFAULT_SHARED=$SHARED
+	cmake $SOURCEDIR -DPACMAKE_DEFAULT_SHARED=$SHARED -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN
 	RESULT=$?
 	
 	if [ $RESULT -eq 0 ]; then
@@ -28,6 +30,10 @@ test_example(){
 	return $RESULT
 }
 
+if [ "$#" -gt "0" ] && [ -f "$1" ]; then
+	toolchain=$1
+fi
+
 FAILED=()
 PASSED=()
 for package in * ; do
@@ -40,7 +46,7 @@ for package in * ; do
 			continue
 		fi
 		for type in "STATIC" "SHARED" ; do
-			test_example $version/ $type
+			test_example $version/ $type $toolchain
 			if [ $? -ne 0 ]; then
 				FAILED+=("$package($version, $type)")
 			else
