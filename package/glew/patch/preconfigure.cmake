@@ -5,7 +5,9 @@ function(pacmake_patch patchdir sourcedir package version)
 	file(WRITE "${sourcedir}/CMakeLists.txt"
 		"cmake_minimum_required(VERSION 2.8.12)\n"
 		"add_subdirectory(build/cmake)\n"
+		"project(glew_dummy)\n"
 	)
+	pacmake_textfile_replace("${sourcedir}/build/cmake/CMakeLists.txt" "WIN32 AND MSVC AND" "BUILD_SHARED_LIBS AND WIN32 AND MSVC AND")
 	pacmake_textfile_replace("${sourcedir}/build/cmake/CMakeLists.txt" "glew_s" "glew")
 	
 	pacmake_textfile_remove("${sourcedir}/build/cmake/CMakeLists.txt" 146 8)
@@ -56,4 +58,6 @@ function(pacmake_patch patchdir sourcedir package version)
 	pacmake_textfile_insert("${sourcedir}/build/cmake/CMakeLists.txt" 98 "else()\n  ")
 	pacmake_textfile_insert("${sourcedir}/build/cmake/CMakeLists.txt" 95 "  ")
 	pacmake_textfile_insert("${sourcedir}/build/cmake/CMakeLists.txt" 94 "if(BUILD_SHARED_LIBS)\n  ")
+	
+	pacmake_textfile_replace("${sourcedir}/build/cmake/CMakeLists.txt" "WIN32 AND MSVC" "BUILD_SHARED_LIBS AND WIN32 AND MSVC")
 endfunction(pacmake_patch)
