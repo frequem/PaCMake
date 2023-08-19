@@ -1,0 +1,138 @@
+pacmake_include(log)
+pacmake_include(register_package)
+pacmake_include(package_version)
+pacmake_include(fetch_package)
+pacmake_include(build_package)
+
+include(CMakeParseArguments)
+
+# pacmake_load_package(packageName)
+function(pacmake_load_package packageName)	
+	if(NOT ${packageName} IN_LIST PACMAKE_PACKAGES_LOADED)
+		set(PACMAKE_PACKAGE_${packageName}_VERSIONS "" CACHE INTERNAL "") # clear package versions before load
+		if(EXISTS "${PACMAKE_BASEDIR}/package/${packageName}/package.cmake")
+			pacmake_log("load_package(${packageName}): Loading package.")
+			
+			set(prevPackage "${PACMAKE_CURRENT_PACKAGE}")
+			set(PACMAKE_CURRENT_PACKAGE "${packageName}" CACHE INTERNAL "")
+			include("${PACMAKE_BASEDIR}/package/${packageName}/package.cmake") # register_package calls
+			set(PACMAKE_CURRENT_PACKAGE "${prevPackage}" CACHE INTERNAL "")
+						
+			list(APPEND PACMAKE_PACKAGES_LOADED ${packageName})
+			set(PACMAKE_PACKAGES_LOADED "${PACMAKE_PACKAGES_LOADED}" CACHE INTERNAL "")
+		else()
+			message(FATAL_ERROR "PaCMake: load_package(${packageName}): Unknown package.")
+		endif()
+	endif()
+endfunction(pacmake_load_package)
+
+# pacmake_add_package(packageName [packageVersionRequested] [STATIC|SHARED|MODULE] [REBUILT_VARIABLE rebuiltVariable])
+function(pacmake_add_package packageName)
+	set(packageTypes "STATIC;SHARED;MODULE")
+	cmake_parse_arguments(args "${packageTypes}" "REBUILT_VARIABLE" "" ${ARGN})
+	
+	set(packageVersionRequested "")
+	list(LENGTH args_UNPARSED_ARGUMENTS unparsedLength)
+	if(${unparsedLength} GREATER 1)
+		message(FATAL_ERROR "PaCMake: add_package(${packageName}): Too many arguments.")
+	elseif(${unparsedLength} GREATER 0)
+		list(GET args_UNPARSED_ARGUMENTS 0 packageVersionRequested)
+	endif()
+	
+	set(packageType "")
+	foreach(type IN LISTS packageTypes)
+		if(packageType AND args_${type})
+			message(FATAL_ERROR "PaCMake: add_package(${packageName} ${packageVersionRequested}): Multiple library types specified.")
+		elseif(args_${type})
+			set(packageType ${type})
+		endif()
+	endforeach()
+	
+	string(REPLACE ";" " " functionCall "add_package(${packageName}")
+	if(packageVersionRequested)
+		string(APPEND functionCall " ${packageVersionRequested}")
+	endif()
+	if(packageType)
+		string(APPEND functionCall " ${packageType}")
+	endif()
+	string(APPEND functionCall ")")
+	pacmake_log("${functionCall}:" INCREMENT)
+	
+	if(NOT packageType)
+		pacmake_log("No library type specified, defaulting to ${PACMAKE_DEFAULT_LIBRARY_TYPE}.")
+		set(packageType ${PACMAKE_DEFAULT_LIBRARY_TYPE})
+	endif()
+	
+	pacmake_load_package(${packageName})
+	
+	pacmake_find_package_version(${packageName} "${packageVersionRequested}" packageVersion) # find compatible version
+	if(NOT packageVersionRequested)
+		pacmake_log("No package version specified, defaulting to highest available (${packageVersion}).")
+	elseif(NOT packageVersion STREQUAL packageVersionRequested)
+		pacmake_log("Package version range specifed, choosing highest compatible (${packageVersion}).")
+	endif()
+		
+	set(forceRebuild "")
+	set(dependencyString "")
+	
+	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_DEPENDENCY_CONFIG_PATH "" CACHE INTERNAL "")
+	if(PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_NAMES)
+		list(LENGTH PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_NAMES nDependencies)
+		pacmake_log("Adding ${nDependencies} dependency package(s):" INCREMENT)
+		math(EXPR nDependencies "${nDependencies} - 1")
+		foreach(i RANGE ${nDependencies})
+			list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_NAMES ${i} dependencyName)
+			list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_VERSIONS ${i} dependencyVersion)
+			list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_TYPES ${i} dependencyType)
+			if(dependencyType STREQUAL "INHERIT")
+				set(dependencyType "${packageType}")
+			elseif(dependencyType STREQUAL "DEFAULT")
+				set(dependencyType "${PACMAKE_DEFAULT_LIBRARY_TYPE}")
+			endif()
+			
+			list(APPEND dependencyString "${dependencyName} ${dependencyVersion} ${dependencyType}")
+			
+			pacmake_add_package(${dependencyName} ${dependencyVersion} ${dependencyType} REBUILT_VARIABLE dependencyRebuilt)
+			if(dependencyRebuilt)
+				set(forceRebuild "FORCE")
+			endif()
+			
+			list(APPEND PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_DEPENDENCY_CONFIG_PATH ${PACMAKE_PACKAGE_${dependencyName}_${dependencyVersion}_${dependencyType}_CONFIG_PATH})
+			set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_DEPENDENCY_CONFIG_PATH "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_DEPENDENCY_CONFIG_PATH}" CACHE INTERNAL "")
+		endforeach()
+		pacmake_log_indent(DECREMENT)
+	endif()
+	
+	pacmake_fetch_package(${packageName} ${packageVersion} packageUpdated)
+	if(packageUpdated)
+		set(forceRebuild "FORCE")
+	endif()
+	
+	list(SORT dependencyString)
+	list(APPEND dependencyString "")
+	string(REPLACE ";" "\n" dependencyString "${dependencyString}")
+	
+	set(prevDependencyString "")
+	if(EXISTS "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/dependencies/${packageType}")
+		file(READ "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/dependencies/${packageType}" prevDependencyString)
+	endif()
+	
+	if(NOT dependencyString STREQUAL prevDependencyString)
+		if(NOT forceRebuild)
+			pacmake_log("Package dependencies changed, forcing rebuild.")
+			set(forceRebuild "FORCE")
+		endif()
+		file(WRITE "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/dependencies/${packageType}" "${dependencyString}")
+	endif()
+	
+	pacmake_build_package(${packageName} ${packageVersion} ${packageType} ${forceRebuild} REBUILT_VARIABLE packageRebuilt)
+	if(args_REBUILT_VARIABLE)
+		set(${args_REBUILT_VARIABLE} ${packageRebuilt} PARENT_SCOPE)
+	endif()
+	
+	pacmake_log("Running find_package.")
+	set(${packageName}_DIR "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_CONFIG_DIR}")
+	find_package(${packageName} REQUIRED NO_DEFAULT_PATH)
+	
+	pacmake_log_indent(DECREMENT)
+endfunction(pacmake_add_package)

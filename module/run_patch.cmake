@@ -1,0 +1,61 @@
+pacmake_include(log)
+
+include(CMakeParseArguments)
+
+# pacmake_run_patch(packageName packageVersion SOURCE)
+# pacmake_run_patch(packageName packageVersion packageType CONFIGURE|BUILD|INSTALL)
+function(pacmake_run_patch packageName packageVersion)
+	string(REPLACE ";" " " functionCall "run_patch(${ARGV})")
+	
+	set(patchTypes "SOURCE;CONFIGURE;BUILD;INSTALL")
+	cmake_parse_arguments(args "${patchTypes}" "" "" ${ARGN})
+	
+	set(packageType "")
+	list(LENGTH args_UNPARSED_ARGUMENTS unparsedLength)
+	if(((args_CONFIGURE OR args_BUILD OR args_INSTALL) AND NOT ${unparsedLength} EQUAL 1) OR (args_SOURCE AND NOT ${unparsedLength} EQUAL 0))
+		message(FATAL_ERROR "PaCMake: ${functionCall}: Wrong number of arguments.")
+	elseif(${unparsedLength} GREATER 0)
+		list(GET args_UNPARSED_ARGUMENTS 0 packageType)
+	endif()
+
+	set(patchType "")
+	foreach(type IN LISTS patchTypes)
+		if(patchType AND args_${type})
+			message(FATAL_ERROR "PaCMake: ${functionCall}: Multiple patch types specified.")
+		elseif(args_${type})
+			set(patchType ${type})
+		endif()
+	endforeach()
+	if(NOT patchType)
+		message(FATAL_ERROR "PaCMake: ${functionCall}: No patch type specified.")
+	endif()	
+	
+	set(workingDirectory "${PACMAKE_HOME}/package/${packageName}/${packageVersion}")
+	if(patchType STREQUAL "SOURCE")
+		string(APPEND workingDirectory "/src/cur")
+	elseif(patchType STREQUAL "CONFIGURE" OR patchType STREQUAL "BUILD")
+		string(APPEND workingDirectory "/build/${CMAKE_SYSTEM}-${CMAKE_SYSTEM_PROCESSOR}/${PACMAKE_BUILD_TYPE}/${packageType}")
+	elseif(patchType STREQUAL "INSTALL")
+		string(APPEND workingDirectory "/install/${CMAKE_SYSTEM}-${CMAKE_SYSTEM_PROCESSOR}/${PACMAKE_BUILD_TYPE}/${packageType}")
+	endif()
+	
+	string(TOLOWER ${patchType} patchTypeLower)
+	set(possiblePatchPaths "")
+	list(APPEND possiblePatchPaths "${PACMAKE_BASEDIR}/package/${packageName}/patch/${packageVersion}/${packageType}/${patchTypeLower}.cmake")
+	list(APPEND possiblePatchPaths "${PACMAKE_BASEDIR}/package/${packageName}/patch/${packageVersion}/${patchTypeLower}.cmake")
+	list(APPEND possiblePatchPaths "${PACMAKE_BASEDIR}/package/${packageName}/patch/${patchTypeLower}.cmake")
+	
+	foreach(possiblePatchPath IN LISTS possiblePatchPaths)
+		if(NOT EXISTS "${possiblePatchPath}")
+			continue()
+		endif()
+		
+		pacmake_log("${functionCall}: Running patch...")
+		include("${possiblePatchPath}")
+		pacmake_patch(${packageName} ${packageVersion} "${workingDirectory}")
+		
+		return()
+	endforeach()
+	
+	#pacmake_log("${functionCall}: No patch to run.")
+endfunction(pacmake_run_patch)

@@ -1,0 +1,121 @@
+# pacmake_find_package_version(packageName packageVersionRequested out_packageVersion)
+# packageVersionRequested:
+#   ""
+# 	0.0.0
+# 	0.0.0...1.0.0
+# 	0.0.0...<1.0.0
+# 	0.0.0...<1
+# 	0...1.0.0
+# 	<1.0.0
+function(pacmake_find_package_version packageName packageVersionRequested out_packageVersion)
+	if(NOT PACMAKE_PACKAGE_${packageName}_VERSIONS)
+		message(FATAL_ERROR "PaCMake: find_package_version(${packageName}): No versions registered for this package.")
+	elseif(NOT packageVersionRequested) # none specified, use default (first)
+		list(GET PACMAKE_PACKAGE_${packageName}_VERSIONS 0 latestVersion)
+		set(${out_packageVersion} ${latestVersion} PARENT_SCOPE)
+	else()
+		string(FIND ${packageVersionRequested} "..." i)
+		set(minVersion ${packageVersionRequested})
+		set(maxVersion ${packageVersionRequested})
+		if(${i} GREATER_EQUAL 0)
+			string(SUBSTRING ${packageVersionRequested} 0 ${i} minVersion)
+			math(EXPR i "${i} + 3")
+			string(SUBSTRING ${packageVersionRequested} ${i} -1 maxVersion)
+		endif()
+		
+		set(maxVersionIncluded TRUE)
+		string(FIND "${maxVersion}" "<" j)
+		if(${j} EQUAL 0)
+			set(maxVersionIncluded FALSE)
+			string(SUBSTRING ${maxVersion} 1 -1 maxVersion)
+			if(maxVersion STREQUAL "")
+				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName}): Expected maximum version not specified(${packageVersionRequested}).")
+			elseif(minVersion STREQUAL packageVersionRequested)
+				set(minVersion "")
+			endif()
+		endif()
+		#message("${packageName} ${PACMAKE_PACKAGE_${packageName}_VERSIONS}")
+		if(${i} LESS 0 AND ${j} LESS 0) # single version
+			if(${packageVersionRequested} IN_LIST PACMAKE_PACKAGE_${packageName}_VERSIONS)
+				set(${out_packageVersion} ${packageVersionRequested} PARENT_SCOPE)
+				return()
+			else()
+				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName}): Version not found(${packageVersionRequested}).")
+			endif()
+		endif()
+		
+		string(REPLACE "." ";" minVersionParts "${minVersion}")
+		foreach(minVersionPart IN LISTS minVersionParts)
+			if(NOT minVersionPart MATCHES "^[0-9]+$")
+				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName}): Invalid minimum version(${minVersion}).")
+			endif()
+		endforeach()
+		list(LENGTH minVersionParts nMinVersionParts)
+		
+		string(REPLACE "." ";" maxVersionParts "${maxVersion}")
+		foreach(maxVersionPart IN LISTS maxVersionParts)
+			if(NOT maxVersionPart MATCHES "^[0-9]+$")
+				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName}): Invalid maximum version(${maxVersion}).")
+			endif()
+		endforeach()
+		list(LENGTH maxVersionParts nMaxVersionParts)
+		
+		set(validVersionCandidates "")
+		foreach(version IN LISTS PACMAKE_PACKAGE_${packageName}_VERSIONS)
+			string(REPLACE "." ";" versionParts "${version}")
+			list(LENGTH versionParts nVersionParts)
+			math(EXPR nVersionParts "${nVersionParts} - 1")
+			list(GET versionParts ${nVersionParts} lastVersionPart)
+			list(REMOVE_AT versionParts ${nVersionParts})
+			if(lastVersionPart MATCHES "^[0-9]+")
+				list(APPEND versionParts ${lastVersionPart})
+				math(EXPR nVersionParts "${nVersionParts} + 1")
+			endif()
+			
+			if(nMinVersionParts GREATER nVersionParts OR nMaxVersionParts GREATER nVersionParts)
+				continue()
+			endif()
+			
+			set(i 0)
+			while(${i} LESS nMinVersionParts)
+				list(GET minVersionParts ${i} minVersionPart)
+				list(GET versionParts ${i} versionPart)
+				if(versionPart EQUAL minVersionPart)
+					math(EXPR i "${i} + 1")
+				elseif(versionPart GREATER minVersionPart)
+					set(i ${nMinVersionParts}) # version is greater than minVersion, skip subversion checks
+				else()
+					break() # version smaller => invalid
+				endif()
+			endwhile()
+			if(i LESS nMinVersionParts)
+				continue()
+			endif()
+			
+			set(i 0)
+			while(${i} LESS nMaxVersionParts)
+				list(GET maxVersionParts ${i} maxVersionPart)
+				list(GET versionParts ${i} versionPart)
+				if(versionPart EQUAL maxVersionPart)
+					math(EXPR i "${i} + 1")
+					if(NOT maxVersionIncluded AND ${i} EQUAL nMaxVersionParts)
+						set(i 0)
+						break() # version equal but not included => invalid
+					endif()
+				elseif(versionPart LESS maxVersionPart)
+					set(i ${nMaxVersionParts}) # version is less than maxVersion, skip subversion checks
+				else()
+					break() # version larger => invalid
+				endif()
+			endwhile()
+			if(i LESS nMaxVersionParts)
+				continue()
+			endif()
+			
+			set(${out_packageVersion} ${version} PARENT_SCOPE)
+			return()
+		endforeach()
+		
+		message(FATAL_ERROR "PaCMake: find_package_version(${packageName}): No compatible version found(${packageVersionRequested}).")
+	endif()
+endfunction()
