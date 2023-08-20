@@ -18,7 +18,15 @@ endfunction(pacmake_textfile_write)
 
 # pacmake_textfile_replace(filePath origString replaceString)
 function(pacmake_textfile_replace filePath origString replaceString)
+	string(REPLACE ";" "@@@___SEMICOLON___@@@" origString "${origString}")
+	string(REPLACE "[" "@@@___SQUARE_BRACKET_OPEN___@@@" origString "${origString}")
+	string(REPLACE "]" "@@@___SQUARE_BRACKET_CLOSE___@@@" origString "${origString}")
+	
+	string(REPLACE ";" "@@@___SEMICOLON___@@@" replaceString "${replaceString}")
+	string(REPLACE "[" "@@@___SQUARE_BRACKET_OPEN___@@@" replaceString "${replaceString}")
+	string(REPLACE "]" "@@@___SQUARE_BRACKET_CLOSE___@@@" replaceString "${replaceString}")
+	
 	pacmake_textfile_read("${filePath}" contents)
-	string(REPLACE "${origString}" "${replaceString}" contents "${contents}")
+	string(REPLACE "${origString}" "${replaceString}" contents ${contents})
 	pacmake_textfile_write("${filePath}" "${contents}")
 endfunction(pacmake_textfile_replace)
