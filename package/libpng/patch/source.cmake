@@ -1,7 +1,7 @@
 pacmake_include(textfile)
 
 function(pacmake_patch packageName packageVersion workingDirectory)
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "find_package(ZLIB REQUIRED)" "find_package(zlib REQUIRED NO_PACKAGE_ROOT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_PACKAGE_REGISTRY NO_CMAKE_SYSTEM_PATH NO_CMAKE_INSTALL_PREFIX NO_CMAKE_SYSTEM_PACKAGE_REGISTRY NO_CMAKE_FIND_ROOT_PATH)")
+	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "find_package(ZLIB REQUIRED)" "find_package(zlib REQUIRED NO_PACKAGE_ROOT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_PACKAGE_REGISTRY NO_CMAKE_SYSTEM_PATH NO_CMAKE_SYSTEM_PACKAGE_REGISTRY NO_CMAKE_FIND_ROOT_PATH)")
 	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "include_directories(\${ZLIB_INCLUDE_DIRS})" "get_target_property(ZLIB_INCLUDE_DIRS zlib::zlib INTERFACE_INCLUDE_DIRECTORIES)")
 	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "\${ZLIB_LIBRARIES}" "zlib::zlib")
 

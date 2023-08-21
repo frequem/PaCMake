@@ -153,9 +153,8 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 					)
 				elseif(sourceType_${i} STREQUAL "URL")
 					file(APPEND 
-						"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt" 
+						"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt"
 						"\t\tDOWNLOAD_DIR \"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch\"\n"
-						"\t\tDOWNLOAD_EXTRACT_TIMESTAMP TRUE\n"
 						"\t\tURL \"${source_${i}}\"\n"
 					)
 				else()

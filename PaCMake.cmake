@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.7)
 
 set(PACMAKE_PACKAGE_FETCH_INTERVAL 604800 CACHE STRING "Interval after which PaCMake packages are updated") # every 7 days
 set(PACMAKE_FORCE_FETCH_PACKAGES "" CACHE STRING "Force fetch the given packages (supports regex).") # format: "<package1Name>[ <package1Version>];<package2Name>[ <package2Version>];..."
