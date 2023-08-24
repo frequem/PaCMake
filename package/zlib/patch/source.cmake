@@ -32,6 +32,6 @@ function(pacmake_patch packageName packageVersion workingDirectory)
 		"\tFILE \"\${PROJECT_NAME}Config.cmake\"\n"
 		"\tNAMESPACE \"\${PROJECT_NAME}::\"\n"
 		"\tDESTINATION \"\${INSTALL_LIB_DIR}/cmake/\${PROJECT_NAME}\"\n"
-		")"
+		")\n"
 	)
 endfunction(pacmake_patch)

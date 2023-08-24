@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.7)
 
 set(PACMAKE_PACKAGE_FETCH_INTERVAL 604800 CACHE STRING "Interval after which PaCMake packages are updated") # every 7 days
-set(PACMAKE_FORCE_FETCH_PACKAGES "" CACHE STRING "Force fetch the given packages (supports regex).") # format: "<package1Name>[ <package1Version>];<package2Name>[ <package2Version>];..."
-set(PACMAKE_FORCE_SOURCE_UPDATE_PACKAGES "" CACHE STRING "Force source updates (not necessarily a refetch) for the given packages (supports regex).") # format: "<package1Name>[ <package1Version>];<package2Name>[ <package2Version>];..."
+set(PACMAKE_FORCE_FETCH_PACKAGES "" CACHE STRING "Force fetch the given packages (supports regex)") # format: "<package1Name>[ <package1Version>];<package2Name>[ <package2Version>];..."
+set(PACMAKE_FORCE_SOURCE_UPDATE_PACKAGES "" CACHE STRING "Force source updates (not necessarily a refetch) for the given packages (supports regex)") # format: "<package1Name>[ <package1Version>];<package2Name>[ <package2Version>];..."
 if(BUILD_SHARED_LIBS)
 	set(PACMAKE_DEFAULT_LIBRARY_TYPE "SHARED" CACHE STRING "Default PaCMake library type")
 else()
 	set(PACMAKE_DEFAULT_LIBRARY_TYPE "STATIC" CACHE STRING "Default PaCMake library type")
 endif()
+set(PACMAKE_DEFAULT_PIC "${CMAKE_POSITION_INDEPENDENT_CODE}" CACHE STRING "PaCMake default value for whether to build position independent code")
 
 if(CMAKE_BUILD_TYPE)
 	set(PACMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING "Build type of PaCMake packages")
