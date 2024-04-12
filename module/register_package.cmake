@@ -2,13 +2,13 @@ pacmake_include(package_version)
 
 include(CMakeParseArguments)
 
-# pacmake_register_package(packageVersion [DEPENDENCIES [dependency1Name dependency1Version] [...]] [SOURCES ...] [CMAKE_ARGS ...])
+# pacmake_register_package(packageVersion [FINAL] [DEPENDENCIES [dependency1Name dependency1Version] [...]] [SOURCES ...] [CMAKE_ARGS ...])
 function(pacmake_register_package packageVersion)
 	if(${packageVersion} IN_LIST PACMAKE_PACKAGE_${PACMAKE_CURRENT_PACKAGE}_VERSIONS)
 		message(FATAL_ERROR "PaCMake: pacmake_register_package(${PACMAKE_CURRENT_PACKAGE}): Duplicate package version (${packageVersion}).")
 	endif()
 	
-	cmake_parse_arguments(args "" "" "DEPENDENCIES;SOURCES;CMAKE_ARGS" ${ARGN})
+	cmake_parse_arguments(args "FINAL" "" "DEPENDENCIES;SOURCES;CMAKE_ARGS" ${ARGN})
 	
 	set(packageName ${PACMAKE_CURRENT_PACKAGE}) # save package name overwritten by dependency loading
 	set(dependencyNames "")
@@ -104,6 +104,7 @@ function(pacmake_register_package packageVersion)
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_VERSIONS "${dependencyVersions}" CACHE INTERNAL "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_TYPES "${dependencyTypes}" CACHE INTERNAL "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_PICS "${dependencyPICs}" CACHE INTERNAL "")
+	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_FINAL "${args_FINAL}" CACHE INTERNAL "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_SOURCES "${args_SOURCES}" CACHE INTERNAL "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_CMAKE_ARGS "${args_CMAKE_ARGS}" CACHE INTERNAL "")
 	
