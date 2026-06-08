@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.11)
 
 option(PACMAKE_FORCE_FETCH "Force fetch PaCMake files" OFF)
 set(PACMAKE_FETCH_INTERVAL 43200 CACHE STRING "Interval after which PaCMake is updated") # every 12 hours
@@ -60,12 +60,12 @@ if(${nSources} GREATER_EQUAL 0)
 	set(preferredCount 0)
 	foreach(i RANGE ${nSources})
 		string(REPLACE ";" " " sourceParams_${i} "${sourceParams_${i}}")
-		
+
 		if(${i} IN_LIST PACMAKE_SKIP_SOURCES)
 			list(REMOVE_ITEM sourceOrder ${i})
 		elseif("${sourceType_${i}} ${source_${i}} ${sourceParams_${i}}" STREQUAL "${prevSource}")
 			set(prevSourceAvailable TRUE)
-			
+
 			# try previous source first, unless another is preferred
 			list(REMOVE_ITEM sourceOrder ${i})
 			if(${i} IN_LIST PACMAKE_PREFER_SOURCES)
@@ -128,10 +128,10 @@ else()
 	else()
 		message(FATAL_ERROR "PaCMake Loader: Invalid fetch initiation.")
 	endif()
-	
+
 	file(WRITE
 		"${homePathAbsolute}/fetch/CMakeLists.txt"
-		"cmake_minimum_required(VERSION 3.6)\n\n"
+		"cmake_minimum_required(VERSION 3.11)\n\n"
 		"project(PaCMake-fetcher DESCRIPTION \"PaCMake fetcher\" LANGUAGES NONE)\n\n"
 		"add_custom_target(\${PROJECT_NAME}_removePrevSourceFiles COMMAND \${CMAKE_COMMAND} -E rm -Rf \"${homePathAbsolute}/src/*\")\n"
 		"include(ExternalProject)\n\n"
@@ -140,25 +140,25 @@ else()
 		"endif()\n\n"
 		"set(sourceArgs \"\")\n"
 	)
-	
+
 	if(${nSources} GREATER_EQUAL 0)
-		foreach(i RANGE ${nSources})			
-			file(APPEND 
-				"${homePathAbsolute}/fetch/CMakeLists.txt" 
+		foreach(i RANGE ${nSources})
+			file(APPEND
+				"${homePathAbsolute}/fetch/CMakeLists.txt"
 				"if(\${PACMAKE_SOURCE_INDEX} EQUAL ${i})\n"
 				"\tset(sourceArgs\n"
 			)
-			
+
 			if(sourceType_${i} STREQUAL "LOCAL")
-				file(APPEND 
-					"${homePathAbsolute}/fetch/CMakeLists.txt" 
+				file(APPEND
+					"${homePathAbsolute}/fetch/CMakeLists.txt"
 					"\t\tDOWNLOAD_COMMAND \${CMAKE_COMMAND} -E copy_directory \"${source_${i}}/\" \"${homePathAbsolute}/src\"\n"
 					"\t\tUPDATE_COMMAND \${CMAKE_COMMAND} -E copy_directory \"${source_${i}}/\" \"${homePathAbsolute}/src\"\n"
 					"\t\tDEPENDS \${PROJECT_NAME}_removePrevSourceFiles\n"
 				)
 			elseif(sourceType_${i} STREQUAL "URL")
-				file(APPEND 
-					"${homePathAbsolute}/fetch/CMakeLists.txt" 
+				file(APPEND
+					"${homePathAbsolute}/fetch/CMakeLists.txt"
 					"\t\tDOWNLOAD_DIR \"${homePathAbsolute}/fetch\"\n"
 					"\t\tURL \"${source_${i}}\"\n"
 					"\t\tDOWNLOAD_EXTRACT_TIMESTAMP TRUE\n"
@@ -166,17 +166,17 @@ else()
 			else()
 				file(APPEND "${homePathAbsolute}/fetch/CMakeLists.txt" "\t\t${sourceType_${i}}_REPOSITORY \"${source_${i}}\"\n")
 			endif()
-			
+
 			if(sourceParams_${i})
 				file(APPEND "${homePathAbsolute}/fetch/CMakeLists.txt" "\t\t${sourceParams_${i}}\n")
 			endif()
-			
+
 			file(APPEND "${homePathAbsolute}/fetch/CMakeLists.txt" "\t)\nelse")
 		endforeach()
 	endif()
-	
-	file(APPEND 
-		"${homePathAbsolute}/fetch/CMakeLists.txt" 
+
+	file(APPEND
+		"${homePathAbsolute}/fetch/CMakeLists.txt"
 		"if(TRUE)\n"
 		"\tmessage(FATAL_ERROR \"PaCMake Fetcher: No valid source index given.\")\n"
 		"endif()\n\n"
@@ -187,13 +187,13 @@ else()
 		"\tCONFIGURE_COMMAND \"\" BUILD_COMMAND \"\" INSTALL_COMMAND \"\"\n"
 		")\n"
 	)
-	
+
 	set(finalSource "")
 	foreach(i IN LISTS sourceOrder)
 		if(NOT "${sourceType_${i}} ${source_${i}} ${sourceParams_${i}}" STREQUAL "${prevSource}")
 			file(REMOVE_RECURSE "${homePathAbsolute}/fetch/build")
 		endif()
-		
+
 		message(STATUS "PaCMake Loader: Selecting source #${i}: ${sourceType_${i}} ${source_${i}} ${sourceParams_${i}}")
 		execute_process(
 			COMMAND "${CMAKE_COMMAND}" -B "build" -S "." -DPACMAKE_SOURCE_INDEX=${i}
@@ -205,7 +205,7 @@ else()
 			message(WARNING "PaCMake Loader: Source #${i} configuration step failed, this is unusual.")
 			continue()
 		endif()
-		
+
 		message(STATUS "PaCMake Loader: Performing fetch operation, please be patient...")
 		execute_process(
 			COMMAND "${CMAKE_COMMAND}" --build "build"
@@ -220,7 +220,7 @@ else()
 			message(STATUS "PaCMake Loader: Source #${i} fetch operation failed.")
 		endif()
 	endforeach()
-	
+
 	if(finalSource)
 		set(PACMAKE_UPDATED TRUE CACHE INTERNAL "")
 		file(WRITE "${homePathAbsolute}/fetch/DONE" "${finalSource}")

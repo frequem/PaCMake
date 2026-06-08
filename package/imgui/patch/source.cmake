@@ -1,7 +1,7 @@
 
 function(pacmake_patch packageName packageVersion workingDirectory)
 	file(WRITE "${workingDirectory}/CMakeLists.txt"
-		"cmake_minimum_required(VERSION 3.5)\n"
+		"cmake_minimum_required(VERSION 3.11)\n"
 		"\n"
 		"project(imgui LANGUAGES CXX VERSION ${packageVersion})\n"
 		"\n"

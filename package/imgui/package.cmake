@@ -17,3 +17,8 @@ pacmake_register_package(
 	1.90.5 FINAL
 	SOURCES URL "https://github.com/ocornut/imgui/archive/v1.90.5.tar.gz" URL_HASH "SHA256=e94b48dba7311c85ba8e3e6fe7c734d76a0eed21b2b42c5180fd5706d1562241"
 )
+
+pacmake_register_package(
+	1.92.8 FINAL
+	SOURCES URL "https://github.com/ocornut/imgui/archive/v1.92.8.tar.gz" URL_HASH "SHA256=fecb33d33930e12ff53a34064e9d3a06c8f7c3e04408f14cd36c80e3faac863b"
+)

@@ -1,9 +1,9 @@
 function(pacmake_patch packageName packageVersion workingDirectory)
 	file(COPY "${PACMAKE_HOME}/package/imgui/${packageVersion}/src/orig/backends/imgui_impl_glfw.h" DESTINATION "${workingDirectory}/")
 	file(COPY "${PACMAKE_HOME}/package/imgui/${packageVersion}/src/orig/backends/imgui_impl_glfw.cpp" DESTINATION "${workingDirectory}/")
-	
+
 	file(WRITE "${workingDirectory}/CMakeLists.txt"
-		"cmake_minimum_required(VERSION 3.5)\n"
+		"cmake_minimum_required(VERSION 3.11)\n"
 		"\n"
 		"project(imgui-backend-glfw LANGUAGES CXX VERSION ${packageVersion})\n"
 		"\n"

@@ -21,3 +21,9 @@ pacmake_register_package(
 	SOURCES EMPTY
 	DEPENDENCIES imgui 1.90.5 glfw3 3.4
 )
+
+pacmake_register_package(
+	1.92.8 FINAL
+	SOURCES EMPTY
+	DEPENDENCIES imgui 1.92.8 glfw3 3.4
+)
