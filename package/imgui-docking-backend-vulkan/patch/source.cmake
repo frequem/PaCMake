@@ -1,16 +1,19 @@
-
 function(pacmake_patch packageName packageVersion workingDirectory)
+	file(COPY "${PACMAKE_HOME}/package/imgui-docking/${packageVersion}/src/orig/backends/imgui_impl_vulkan.h" DESTINATION "${workingDirectory}/")
+	file(COPY "${PACMAKE_HOME}/package/imgui-docking/${packageVersion}/src/orig/backends/imgui_impl_vulkan.cpp" DESTINATION "${workingDirectory}/")
+
 	file(WRITE "${workingDirectory}/CMakeLists.txt"
 		"cmake_minimum_required(VERSION 3.11)\n"
 		"\n"
-		"project(implot LANGUAGES CXX VERSION ${packageVersion})\n"
+		"project(imgui-docking-backend-vulkan LANGUAGES CXX VERSION ${packageVersion})\n"
 		"\n"
 		"file(GLOB SOURCES \"*.cpp\")\n"
 		"file(GLOB HEADERS \"*.h\")\n"
 		"add_library(\${PROJECT_NAME} \${SOURCES} \${HEADERS})\n"
 		"\n"
-		"find_package(imgui REQUIRED)\n"
-		"target_link_libraries(\${PROJECT_NAME} PUBLIC imgui::imgui)\n"
+		"find_package(imgui-docking REQUIRED)\n"
+		"find_package(Vulkan REQUIRED)\n"
+		"target_link_libraries(\${PROJECT_NAME} PUBLIC imgui::imgui-docking Vulkan::Vulkan)\n"
 		"\n"
 		"include(GNUInstallDirs)\n"
 		"\n"
@@ -44,7 +47,7 @@ function(pacmake_patch packageName packageVersion workingDirectory)
 		"install(\n"
 		"\tEXPORT \"\${PROJECT_NAME}Targets\"\n"
 		"\tFILE \"\${PROJECT_NAME}Config.cmake\"\n"
-		"\tNAMESPACE \"implot::\"\n"
+		"\tNAMESPACE \"imgui::\"\n"
 		"\tDESTINATION \"\${CMAKE_INSTALL_LIBDIR}/cmake/\${PROJECT_NAME}\"\n"
 		")\n"
 	)

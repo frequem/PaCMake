@@ -7,9 +7,9 @@ function(pacmake_register_package packageVersion)
 	if(${packageVersion} IN_LIST PACMAKE_PACKAGE_${PACMAKE_CURRENT_PACKAGE}_VERSIONS)
 		message(FATAL_ERROR "PaCMake: pacmake_register_package(${PACMAKE_CURRENT_PACKAGE}): Duplicate package version (${packageVersion}).")
 	endif()
-	
+
 	cmake_parse_arguments(args "FINAL" "" "DEPENDENCIES;SOURCES;CMAKE_ARGS" ${ARGN})
-	
+
 	set(packageName ${PACMAKE_CURRENT_PACKAGE}) # save package name overwritten by dependency loading
 	set(dependencyNames "")
 	set(dependencyVersions "")
@@ -24,7 +24,7 @@ function(pacmake_register_package packageVersion)
 			list(GET args_DEPENDENCIES ${iDependencyName} dependencyName)
 			math(EXPR iDependencyVersionRequested "${i}")
 			list(GET args_DEPENDENCIES ${iDependencyVersionRequested} dependencyVersionRequested)
-			
+
 			set(dependencyType "")
 			set(dependencyPIC "")
 			foreach(j RANGE 1 2)
@@ -35,13 +35,13 @@ function(pacmake_register_package packageVersion)
 					if(NOT "${possibleArgName}" IN_LIST possibleArgNames)
 						break()
 					endif()
-					
+
 					math(EXPR iPossibleArgValue "${i} + 2")
 					if(${iPossibleArgValue} GREATER_EQUAL ${nDependencies})
 						message(FATAL_ERROR "PaCMake: pacmake_register_package(${packageName} ${packageVersion}): Missing ${possibleArgName} dependency argument.")
 					endif()
 					list(GET args_DEPENDENCIES ${iPossibleArgValue} argValue)
-					
+
 					set(argValues "")
 					if(possibleArgName STREQUAL "TYPE")
 						set(argValues "STATIC;SHARED;MODULE;DEFAULT;INHERIT")
@@ -52,26 +52,26 @@ function(pacmake_register_package packageVersion)
 					endif()
 					if(NOT "${argValue}" IN_LIST argValues)
 						message(FATAL_ERROR "PaCMake: pacmake_register_package(${packageName} ${packageVersion}): Invalid ${possibleArgName} dependency argument(${argValue}).")
-					endif()			
-					
+					endif()
+
 					math(EXPR i "${i} + 2")
 				endif()
 			endforeach()
 			math(EXPR i "${i} + 2")
-			
+
 			if(dependencyType STREQUAL "")
 				set(dependencyType "INHERIT")
 			endif()
 			if(dependencyPIC STREQUAL "")
 				set(dependencyPIC "INHERIT")
 			endif()
-			
+
 			if(NOT packageName STREQUAL dependencyName)
 				pacmake_load_package(${dependencyName})
 			endif()
-			
+
 			pacmake_find_package_version(${dependencyName} ${dependencyVersionRequested} dependencyVersion) # error if no compatible version is found
-			
+
 			if(dependencyNames)
 				list(LENGTH dependencyNames nPrevDependencyNames)
 				set(j 0)
@@ -81,14 +81,14 @@ function(pacmake_register_package packageVersion)
 					if(prevDependencyName STREQUAL dependencyName AND prevDependencyVersion STREQUAL dependencyVersion)
 						break()
 					endif()
-					
+
 					math(EXPR j "${j} + 1")
 				endwhile()
 				if(${j} LESS ${nPrevDependencyNames})
 					message(FATAL_ERROR "PaCMake: pacmake_register_package(${packageName} ${packageVersion}): Duplicate dependency(${dependencyName} ${dependencyVersion}).")
 				endif()
 			endif()
-			
+
 			list(APPEND dependencyNames "${dependencyName}")
 			list(APPEND dependencyVersions "${dependencyVersion}")
 			list(APPEND dependencyTypes "${dependencyType}")
@@ -99,7 +99,7 @@ function(pacmake_register_package packageVersion)
 			message(FATAL_ERROR "PaCMake: pacmake_register_package(${packageName} ${packageVersion}): Invalid dependencies: ${dependencyString}. Version missing?")
 		endif()
 	endif()
-	
+
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_NAMES "${dependencyNames}" CACHE INTERNAL "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_VERSIONS "${dependencyVersions}" CACHE INTERNAL "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_TYPES "${dependencyTypes}" CACHE INTERNAL "")
@@ -107,7 +107,7 @@ function(pacmake_register_package packageVersion)
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_FINAL "${args_FINAL}" CACHE INTERNAL "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_SOURCES "${args_SOURCES}" CACHE INTERNAL "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_CMAKE_ARGS "${args_CMAKE_ARGS}" CACHE INTERNAL "")
-	
+
 	list(APPEND PACMAKE_PACKAGE_${packageName}_VERSIONS ${packageVersion})
 	list(SORT PACMAKE_PACKAGE_${packageName}_VERSIONS COMPARE NATURAL ORDER DESCENDING)
 	set(PACMAKE_PACKAGE_${packageName}_VERSIONS "${PACMAKE_PACKAGE_${packageName}_VERSIONS}" CACHE INTERNAL "")
