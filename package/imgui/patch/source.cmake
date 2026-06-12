@@ -42,7 +42,7 @@ function(pacmake_patch packageName packageVersion workingDirectory)
 		"install(\n"
 		"\tEXPORT \"\${PROJECT_NAME}Targets\"\n"
 		"\tFILE \"\${PROJECT_NAME}Config.cmake\"\n"
-		"\tNAMESPACE \"\${PROJECT_NAME}::\"\n"
+		"\tNAMESPACE \"imgui::\"\n"
 		"\tDESTINATION \"\${CMAKE_INSTALL_LIBDIR}/cmake/\${PROJECT_NAME}\"\n"
 		")\n"
 	)

@@ -10,7 +10,7 @@ function(pacmake_patch packageName packageVersion workingDirectory)
 		"add_library(\${PROJECT_NAME} \${SOURCES} \${HEADERS})\n"
 		"\n"
 		"find_package(imgui-docking REQUIRED)\n"
-		"target_link_libraries(\${PROJECT_NAME} PUBLIC imgui::imgui-docking)\n"
+		"target_link_libraries(\${PROJECT_NAME} PUBLIC imgui-docking::imgui-docking)\n"
 		"\n"
 		"include(GNUInstallDirs)\n"
 		"\n"
@@ -44,7 +44,7 @@ function(pacmake_patch packageName packageVersion workingDirectory)
 		"install(\n"
 		"\tEXPORT \"\${PROJECT_NAME}Targets\"\n"
 		"\tFILE \"\${PROJECT_NAME}Config.cmake\"\n"
-		"\tNAMESPACE \"implot::\"\n"
+		"\tNAMESPACE \"implot-docking::\"\n"
 		"\tDESTINATION \"\${CMAKE_INSTALL_LIBDIR}/cmake/\${PROJECT_NAME}\"\n"
 		")\n"
 	)

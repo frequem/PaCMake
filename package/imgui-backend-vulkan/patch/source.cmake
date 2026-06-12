@@ -5,7 +5,7 @@ function(pacmake_patch packageName packageVersion workingDirectory)
 	file(WRITE "${workingDirectory}/CMakeLists.txt"
 		"cmake_minimum_required(VERSION 3.11)\n"
 		"\n"
-		"project(imgui-backend-vulkan LANGUAGES CXX VERSION ${packageVersion})\n"
+		"project(backend-vulkan LANGUAGES CXX VERSION ${packageVersion})\n"
 		"\n"
 		"file(GLOB SOURCES \"*.cpp\")\n"
 		"file(GLOB HEADERS \"*.h\")\n"
