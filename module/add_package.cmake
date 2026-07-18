@@ -7,17 +7,17 @@ pacmake_include(build_package)
 include(CMakeParseArguments)
 
 # pacmake_load_package(packageName)
-function(pacmake_load_package packageName)	
+function(pacmake_load_package packageName)
 	if(NOT ${packageName} IN_LIST PACMAKE_PACKAGES_LOADED)
 		set(PACMAKE_PACKAGE_${packageName}_VERSIONS "" CACHE INTERNAL "") # clear package versions before load
 		if(EXISTS "${PACMAKE_BASEDIR}/package/${packageName}/package.cmake")
 			pacmake_log("load_package(${packageName}): Loading package.")
-			
+
 			set(prevPackage "${PACMAKE_CURRENT_PACKAGE}")
 			set(PACMAKE_CURRENT_PACKAGE "${packageName}" CACHE INTERNAL "")
 			include("${PACMAKE_BASEDIR}/package/${packageName}/package.cmake") # register_package calls
 			set(PACMAKE_CURRENT_PACKAGE "${prevPackage}" CACHE INTERNAL "")
-						
+
 			list(APPEND PACMAKE_PACKAGES_LOADED ${packageName})
 			set(PACMAKE_PACKAGES_LOADED "${PACMAKE_PACKAGES_LOADED}" CACHE INTERNAL "")
 		else()
@@ -26,11 +26,11 @@ function(pacmake_load_package packageName)
 	endif()
 endfunction(pacmake_load_package)
 
-# pacmake_add_package(packageName [packageVersionRequested] [STATIC|SHARED|MODULE] [PIC|NO_PIC] [REBUILT_VARIABLE rebuiltVariable])
+# pacmake_add_package(packageName [packageVersionRequested] [STATIC|SHARED|MODULE] [PIC|NO_PIC] [REBUILT_VARIABLE rebuiltVariable] [COMPONENTS components...])
 function(pacmake_add_package packageName)
 	set(packageTypes "STATIC;SHARED;MODULE")
-	cmake_parse_arguments(args "${packageTypes};PIC;NO_PIC" "REBUILT_VARIABLE" "" ${ARGN})
-	
+	cmake_parse_arguments(args "${packageTypes};PIC;NO_PIC" "REBUILT_VARIABLE" "COMPONENTS" ${ARGN})
+
 	set(packageVersionRequested "")
 	list(LENGTH args_UNPARSED_ARGUMENTS unparsedLength)
 	if(${unparsedLength} GREATER 1)
@@ -38,7 +38,7 @@ function(pacmake_add_package packageName)
 	elseif(${unparsedLength} GREATER 0)
 		list(GET args_UNPARSED_ARGUMENTS 0 packageVersionRequested)
 	endif()
-	
+
 	set(packageType "")
 	foreach(type IN LISTS packageTypes)
 		if(packageType AND args_${type})
@@ -47,7 +47,7 @@ function(pacmake_add_package packageName)
 			set(packageType ${type})
 		endif()
 	endforeach()
-	
+
 	set(packagePIC "")
 	if(args_PIC OR args_NO_PIC)
 		if(args_PIC AND args_NO_PIC)
@@ -58,7 +58,7 @@ function(pacmake_add_package packageName)
 			set(packagePIC "NO_PIC")
 		endif()
 	endif()
-	
+
 	set(functionCall "add_package(${packageName}")
 	if(packageVersionRequested)
 		string(APPEND functionCall " ${packageVersionRequested}")
@@ -71,7 +71,7 @@ function(pacmake_add_package packageName)
 	endif()
 	string(APPEND functionCall ")")
 	pacmake_log("${functionCall}:" INCREMENT)
-	
+
 	if(NOT packageType)
 		pacmake_log("No library type specified, defaulting to ${PACMAKE_DEFAULT_LIBRARY_TYPE}.")
 		set(packageType ${PACMAKE_DEFAULT_LIBRARY_TYPE})
@@ -84,16 +84,16 @@ function(pacmake_add_package packageName)
 		pacmake_log("PIC or NO_PIC not specified, defaulting to ${default}.")
 		set(packagePIC ${default})
 	endif()
-	
+
 	pacmake_load_package(${packageName})
-	
+
 	pacmake_find_package_version(${packageName} "${packageVersionRequested}" packageVersion) # find compatible version
 	if(NOT packageVersionRequested)
 		pacmake_log("No package version specified, defaulting to highest available (${packageVersion}).")
 	elseif(NOT packageVersion STREQUAL packageVersionRequested)
 		pacmake_log("Package version range specifed, choosing highest compatible (${packageVersion}).")
 	endif()
-		
+
 	set(forceRebuild "")
 	set(dependencyString "")
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH "" CACHE INTERNAL "")
@@ -117,41 +117,41 @@ function(pacmake_add_package packageName)
 				if(dependencyPIC STREQUAL "DEFAULT")
 					set(dependencyPIC "${PACMAKE_DEFAULT_PIC}")
 				endif()
-				
+
 				if(dependencyPIC)
 					set(dependencyPIC "PIC")
 				else()
 					set(dependencyPIC "NO_PIC")
 				endif()
 			endif()
-			
+
 			list(APPEND dependencyString "${dependencyName} ${dependencyVersion} ${dependencyType} ${dependencyPIC}")
-			
+
 			pacmake_add_package(${dependencyName} ${dependencyVersion} ${dependencyType} ${dependencyPIC} REBUILT_VARIABLE dependencyRebuilt)
 			if(dependencyRebuilt)
 				set(forceRebuild "FORCE")
 			endif()
-			
+
 			list(APPEND PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH ${PACMAKE_PACKAGE_${dependencyName}_${dependencyVersion}_${dependencyType}_${packagePIC}_CONFIG_PATH})
 			set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH}" CACHE INTERNAL "")
 		endforeach()
 		pacmake_log_indent(DECREMENT)
 	endif()
-	
+
 	pacmake_fetch_package(${packageName} ${packageVersion} packageUpdated)
 	if(packageUpdated)
 		set(forceRebuild "FORCE")
 	endif()
-	
+
 	list(SORT dependencyString)
 	list(APPEND dependencyString "")
 	string(REPLACE ";" "\n" dependencyString "${dependencyString}")
-	
+
 	set(prevDependencyString "")
 	if(EXISTS "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/dependencies/${packageType}-${packagePIC}")
 		file(READ "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/dependencies/${packageType}-${packagePIC}" prevDependencyString)
 	endif()
-	
+
 	if(NOT dependencyString STREQUAL prevDependencyString)
 		if(NOT forceRebuild)
 			pacmake_log("Package dependencies changed, forcing rebuild.")
@@ -159,15 +159,15 @@ function(pacmake_add_package packageName)
 		endif()
 		file(WRITE "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/dependencies/${packageType}-${packagePIC}" "${dependencyString}")
 	endif()
-	
+
 	pacmake_build_package(${packageName} ${packageVersion} ${packageType} ${packagePIC} ${forceRebuild} REBUILT_VARIABLE packageRebuilt)
 	if(args_REBUILT_VARIABLE)
 		set(${args_REBUILT_VARIABLE} ${packageRebuilt} PARENT_SCOPE)
 	endif()
-	
+
 	pacmake_log("Running find_package.")
 	set(${packageName}_DIR "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_DIR}")
-	find_package(${packageName} REQUIRED NO_DEFAULT_PATH)
-	
+	find_package(${packageName} COMPONENTS ${args_COMPONENTS} REQUIRED NO_DEFAULT_PATH)
+
 	pacmake_log_indent(DECREMENT)
 endfunction(pacmake_add_package)
