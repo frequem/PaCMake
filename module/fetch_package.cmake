@@ -186,6 +186,11 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 			")\n"
 		)
 
+		set(no_author_warnings "-Wno-author")
+		if (CMAKE_VERSION VERSION_LESS "4.4")
+			set(no_author_warnings "-Wno-dev")
+		endif()
+
 		set(finalSource "")
 		foreach(i IN LISTS sourceOrder)
 			if(NOT "${sourceType_${i}} ${source_${i}} ${sourceParams_${i}}" STREQUAL "${prevSource}")
@@ -194,7 +199,7 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 
 			pacmake_log("Selecting source #${i}: ${sourceType_${i}} ${source_${i}} ${sourceParams_${i}}")
 			execute_process(
-				COMMAND "${CMAKE_COMMAND}" -B "build" -S "." -Wno-dev -DPACMAKE_PACKAGE_SOURCE_INDEX=${i}
+				COMMAND "${CMAKE_COMMAND}" -B "build" -S "." ${no_author_warnings} -DPACMAKE_PACKAGE_SOURCE_INDEX=${i}
 				WORKING_DIRECTORY "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch"
 				RESULT_VARIABLE result
 				OUTPUT_QUIET

@@ -17,7 +17,5 @@ add_executable(test ${test_sources})
 target_link_libraries(test PUBLIC libpng::libpng)
 ```
 Both the library type (here: SHARED) and version (here: 1.6.40) arguments are optional.
-Examples for each respective package can be found in [the package folders][packages].
 
 [PaCMakeLoader]: <https://github.com/frequem/PaCMake/blob/master/PaCMakeLoader.cmake>
-[packages]: <https://github.com/frequem/PaCMake/tree/master/package>
