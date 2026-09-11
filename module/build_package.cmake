@@ -89,23 +89,18 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 		if(EXISTS "${buildDirectory}/PaCMake_build_package/configure.DONE" AND NOT args_FORCE)
 			pacmake_log("Build files exists, skipping configuration.")
 		else()
-			set(prefixPath "")
-			set(findRootPath "-DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}")
-			if(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH)
-				set(prefixPath "-DCMAKE_PREFIX_PATH=${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH}")
-				set(findRootPath "-DCMAKE_FIND_ROOT_PATH=${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH}")
-				if(CMAKE_FIND_ROOT_PATH)
-					string(APPEND findRootPath ";${CMAKE_FIND_ROOT_PATH}")
-				endif()
+			set(dependencyDirs "")
+			if(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS)
+				list(LENGTH PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS nDependencyDirs)
+				math(EXPR nDependencyDirs "${nDependencyDirs} / 2 - 1")
+				foreach(i RANGE ${nDependencyDirs})
+					math(EXPR iDependencyName "${i} * 2")
+					math(EXPR iDependencyDir "${i} * 2 + 1")
+					list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS ${iDependencyName} dependencyName)
+					list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS ${iDependencyDir} dependencyDir)
+					list(APPEND dependencyDirs "-D${dependencyName}_DIR=${dependencyDir}")
+				endforeach()
 			endif()
-			string(REPLACE ";" "\\;" prefixPath "${prefixPath}")
-			string(REPLACE ";" "\\;" findRootPath "${findRootPath}")
-
-			set(emptyDependencyDirs "")
-			foreach(dependencyName IN LISTS PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_NAMES)
-				list(APPEND emptyDependencyDirs "-D${dependencyName}_DIR=")
-			endforeach()
-			list(REMOVE_DUPLICATES emptyDependencyDirs)
 
 			set(buildSharedLibs ON)
 			if(packageType STREQUAL "STATIC")
@@ -133,10 +128,8 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 				"-DBUILD_SHARED_LIBS=${buildSharedLibs}"
 				"-DCMAKE_BUILD_TYPE=${PACMAKE_BUILD_TYPE}"
 				"-DCMAKE_POSITION_INDEPENDENT_CODE=${pic}"
-				${emptyDependencyDirs}
-				${prefixPath}
+				${dependencyDirs}
 				${systemVariables}
-				${findRootPath}
 				"-DPACMAKE_PACKAGE_FETCH_INTERVAL=-1" # don't refetch any packages
 				"-DPACMAKE_DEFAULT_LIBRARY_TYPE=${packageType}"
 				"-DPACMAKE_DEFAULT_PIC=${packagePIC}"
@@ -203,10 +196,6 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 	endif()
 
 	pacmake_find_config_directory(${packageName} ${installDirectory} configDirectory)
-	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_PATH "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH}" CACHE INTERNAL "")
-	list(APPEND PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_PATH "${configDirectory}")
-	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_PATH "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_PATH}" CACHE INTERNAL "")
-
 	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_DIR "${configDirectory}" CACHE INTERNAL "")
 	pacmake_log_indent(DECREMENT)
 endfunction()

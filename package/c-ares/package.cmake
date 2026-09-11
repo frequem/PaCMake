@@ -1,0 +1,4 @@
+pacmake_register_package(
+	1.34.8 FINAL
+	SOURCES URL "https://github.com/c-ares/c-ares/releases/download/v1.34.8/c-ares-1.34.8.tar.gz" URL_HASH "SHA256=c222b6d681096f9444d2c4863d2c1174019e27cacca0a4a5c114d36dd7d7bf78"
+)

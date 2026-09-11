@@ -96,7 +96,7 @@ function(pacmake_add_package packageName)
 
 	set(forceRebuild "")
 	set(dependencyString "")
-	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH "" CACHE INTERNAL "")
+	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS "" CACHE INTERNAL "")
 	if(PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_NAMES)
 		list(LENGTH PACMAKE_PACKAGE_${packageName}_${packageVersion}_DEPENDENCY_NAMES nDependencies)
 		pacmake_log("Adding ${nDependencies} dependency package(s):" INCREMENT)
@@ -132,8 +132,11 @@ function(pacmake_add_package packageName)
 				set(forceRebuild "FORCE")
 			endif()
 
-			list(APPEND PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH ${PACMAKE_PACKAGE_${dependencyName}_${dependencyVersion}_${dependencyType}_${packagePIC}_CONFIG_PATH})
-			set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_PATH}" CACHE INTERNAL "")
+			list(APPEND PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS
+				${PACMAKE_PACKAGE_${dependencyName}_${dependencyVersion}_${dependencyType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS}
+				"${dependencyName}" ${PACMAKE_PACKAGE_${dependencyName}_${dependencyVersion}_${dependencyType}_${packagePIC}_CONFIG_DIR}
+			)
+			set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS}" CACHE INTERNAL "")
 		endforeach()
 		pacmake_log_indent(DECREMENT)
 	endif()
@@ -166,6 +169,19 @@ function(pacmake_add_package packageName)
 	endif()
 
 	pacmake_log("Running find_package.")
+
+	if(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS)
+		list(LENGTH PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS nDependencyDirs)
+		math(EXPR nDependencyDirs "${nDependencyDirs} / 2 - 1")
+		foreach(i RANGE ${nDependencyDirs})
+			math(EXPR iDependencyName "${i} * 2")
+			math(EXPR iDependencyDir "${i} * 2 + 1")
+			list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS ${iDependencyName} dependencyName)
+			list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS ${iDependencyDir} dependencyDir)
+			set(${dependencyName}_DIR "${dependencyDir}")
+		endforeach()
+	endif()
+
 	set(${packageName}_DIR "${PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_DIR}")
 	find_package(${packageName} COMPONENTS ${args_COMPONENTS} REQUIRED NO_DEFAULT_PATH)
 
