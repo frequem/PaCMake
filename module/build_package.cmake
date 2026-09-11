@@ -2,6 +2,7 @@ pacmake_include(log)
 pacmake_include(run_patch)
 
 include(CMakeParseArguments)
+include(ProcessorCount)
 
 function(pacmake_transfer_system_variables out_variables)
 	function(add_var varList newVar)
@@ -118,10 +119,15 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 
 			pacmake_transfer_system_variables(systemVariables)
 
+			set(no_unusedcli_warnings "-Wno-unused-cli")
+			if (CMAKE_VERSION VERSION_LESS "4.4")
+				set(no_unusedcli_warnings "--no-warn-unused-cli")
+			endif()
+
 			pacmake_log("Configuring package...")
 			execute_process(
 				COMMAND "${CMAKE_COMMAND}"
-				#--no-warn-unused-cli -Wno-deprecated
+				${no_unusedcli_warnings}
 				-B "${buildDirectory}" -S "."
 				"-DCMAKE_INSTALL_PREFIX=${installDirectory}"
 				"-DBUILD_SHARED_LIBS=${buildSharedLibs}"
@@ -142,7 +148,9 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 				ERROR_FILE "${buildDirectory}/PaCMake_build_package/configure.log"
 			)
 			if(NOT result EQUAL 0)
-				message(FATAL_ERROR "PaCMake: ${functionCall}: Configuration failed, see ${buildDirectory}/PaCMake_build_package/configure.log for details.")
+				file(READ "${buildDirectory}/PaCMake_build_package/configure.log" contents)
+				message("\n${packageName} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/configure.log):\n${contents}")
+				message(FATAL_ERROR "PaCMake: ${functionCall}: Configuration failed.")
 			endif()
 			pacmake_run_patch(${packageName} ${packageVersion} ${packageType} ${packagePIC} CONFIGURE)
 			file(WRITE "${buildDirectory}/PaCMake_build_package/configure.DONE")
@@ -151,16 +159,24 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 		if(EXISTS "${buildDirectory}/PaCMake_build_package/build.DONE" AND NOT args_FORCE)
 			pacmake_log("Package binaries exist, skipping build.")
 		else()
+			set(parallel_build "")
+			if(NOT DEFINED CMAKE_BUILD_PARALLEL_LEVEL)
+				ProcessorCount(N)
+				set(parallel_build --parallel ${N})
+			endif()
+
 			pacmake_log("Executing build step, please be patient...")
 			execute_process(
-				COMMAND "${CMAKE_COMMAND}" --build "."
+				COMMAND "${CMAKE_COMMAND}" --build "." ${parallel_build}
 				WORKING_DIRECTORY "${buildDirectory}"
 				RESULT_VARIABLE result
 				OUTPUT_FILE "${buildDirectory}/PaCMake_build_package/build.log"
 				ERROR_FILE "${buildDirectory}/PaCMake_build_package/build.log"
 			)
 			if(NOT result EQUAL 0)
-				message(FATAL_ERROR "PaCMake: ${functionCall}: Build failed, see ${buildDirectory}/PaCMake_build_package/build.log for details.")
+				file(READ "${buildDirectory}/PaCMake_build_package/build.log" contents)
+				message("\n${packageName} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/build.log):\n${contents}")
+				message(FATAL_ERROR "PaCMake: ${functionCall}: Build failed.")
 			endif()
 			pacmake_run_patch(${packageName} ${packageVersion} ${packageType} ${packagePIC} BUILD)
 			file(WRITE "${buildDirectory}/PaCMake_build_package/build.DONE")
@@ -168,14 +184,16 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 
 		pacmake_log("Installing package...")
 		execute_process(
-			COMMAND "${CMAKE_COMMAND}" --build "." --target install
+			COMMAND "${CMAKE_COMMAND}" --build "." --target install ${parallel_build}
 			WORKING_DIRECTORY "${buildDirectory}"
 			RESULT_VARIABLE result
 			OUTPUT_FILE "${buildDirectory}/PaCMake_build_package/install.log"
 			ERROR_FILE "${buildDirectory}/PaCMake_build_package/install.log"
 		)
 		if(NOT result EQUAL 0)
-			message(FATAL_ERROR "PaCMake: ${functionCall}: Installation failed, see ${buildDirectory}/PaCMake_build_package/install.log for details.")
+			file(READ "${buildDirectory}/PaCMake_build_package/install.log" contents)
+			message("\n${packageName} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/install.log):\n${contents}")
+			message(FATAL_ERROR "PaCMake: ${functionCall}: Installation failed.")
 		endif()
 		pacmake_run_patch(${packageName} ${packageVersion} ${packageType} ${packagePIC} INSTALL)
 
