@@ -1,26 +1,25 @@
 pacmake_include(textfile)
 
 function(pacmake_patch packageName packageVersion workingDirectory)
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "find_package(ZLIB REQUIRED)" "find_package(zlib REQUIRED NO_PACKAGE_ROOT_PATH NO_CMAKE_ENVIRONMENT_PATH NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_PACKAGE_REGISTRY NO_CMAKE_SYSTEM_PATH NO_CMAKE_SYSTEM_PACKAGE_REGISTRY NO_CMAKE_FIND_ROOT_PATH)")
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "include_directories(\${ZLIB_INCLUDE_DIRS})" "get_target_property(ZLIB_INCLUDE_DIRS zlib::zlib INTERFACE_INCLUDE_DIRECTORIES)")
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "\${ZLIB_LIBRARIES}" "zlib::zlib")
+	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "${workingDirectory}/CMakeLists.txt"
+		STRING
+		"cmake_minimum_required(VERSION 3.1)" "cmake_minimum_required(VERSION 3.10)"
+		"cmake_policy(VERSION 3.1)" "cmake_policy(VERSION 3.10)"
+		"find_package(ZLIB REQUIRED)" "find_package(zlib REQUIRED)"
+		"include_directories(\${ZLIB_INCLUDE_DIRS})" "get_target_property(ZLIB_INCLUDE_DIRS zlib::zlib INTERFACE_INCLUDE_DIRECTORIES)"
+		"\${ZLIB_LIBRARIES}" "zlib::zlib"
+		"option(PNG_SHARED" "# option(PNG_SHARED"
+		"option(PNG_STATIC" "# option(PNG_STATIC"
+		"if(PNG_SHARED)" "if(BUILD_SHARED_LIBS)"
+		"if(PNG_STATIC)" "if(NOT BUILD_SHARED_LIBS)"
+		"png_shared" "png"
+		"png_static" "png"
+		"target_link_libraries(png " "target_include_directories(png PUBLIC \$<INSTALL_INTERFACE:include>)\n  target_link_libraries(png "
+		"install(EXPORT libpng" "set_target_properties(png PROPERTIES EXPORT_NAME libpng)\n  install(EXPORT libpng"
+		"FILE lib\${PNG_LIB_NAME}.cmake" "FILE libpngConfig.cmake\n          NAMESPACE \"\${PROJECT_NAME}::\"" # 1.6.39
+		"FILE libpng\${PNGLIB_ABI_VERSION}.cmake" "FILE libpngConfig.cmake\n          NAMESPACE \"\${PROJECT_NAME}::\"" # 1.6.40
+	)
 
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "option(PNG_SHARED" "#option(PNG_SHARED")
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "option(PNG_STATIC" "#option(PNG_STATIC")
-	
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "if(PNG_SHARED)" "if(BUILD_SHARED_LIBS)")
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "if(PNG_STATIC)" "if(NOT BUILD_SHARED_LIBS)")
-	
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "png_shared" "png")
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "png_static" "png")
-	
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "target_link_libraries(png " "target_include_directories(png PUBLIC \$<INSTALL_INTERFACE:include>)\n  target_link_libraries(png ")
-	
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "install(EXPORT libpng" "set_target_properties(png PROPERTIES EXPORT_NAME libpng)\n  install(EXPORT libpng")
-	
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "FILE lib\${PNG_LIB_NAME}.cmake" "FILE libpngConfig.cmake\n          NAMESPACE \"\${PROJECT_NAME}::\"") # 1.6.39
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "FILE libpng\${PNGLIB_ABI_VERSION}.cmake" "FILE libpngConfig.cmake\n          NAMESPACE \"\${PROJECT_NAME}::\"") # 1.6.40
-	
 	file(APPEND "${workingDirectory}/CMakeLists.txt"
 		"\n"
 		"include(CMakePackageConfigHelpers)\n"

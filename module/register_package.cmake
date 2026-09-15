@@ -2,7 +2,7 @@ pacmake_include(package_version)
 
 include(CMakeParseArguments)
 
-# pacmake_register_package(packageVersion [FINAL] [DEPENDENCIES [dependency1Name dependency1Version] [...]] [SOURCES ...] [CMAKE_ARGS ...])
+# pacmake_register_package(packageVersion [FINAL] [DEPENDENCIES dependency1Name dependency1Version [...]] [SOURCES ...] [CMAKE_ARGS ...])
 function(pacmake_register_package packageVersion)
 	if(${packageVersion} IN_LIST PACMAKE_PACKAGE_${PACMAKE_CURRENT_PACKAGE}_VERSIONS)
 		message(FATAL_ERROR "PaCMake: pacmake_register_package(${PACMAKE_CURRENT_PACKAGE}): Duplicate package version (${packageVersion}).")

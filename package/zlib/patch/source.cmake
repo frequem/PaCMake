@@ -1,9 +1,13 @@
 pacmake_include(textfile)
 
 function(pacmake_patch packageName packageVersion workingDirectory)
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "zlib zlibstatic" "zlib")
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "add_library(zlib SHARED" "add_library(zlib")
-	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "add_library(zlibstatic STATIC" "#add_library(zlibstatic STATIC")
+	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "${workingDirectory}/CMakeLists.txt"
+		STRING
+		"cmake_minimum_required(VERSION 2.4.4)" "cmake_minimum_required(VERSION 3.10)"
+		"zlib zlibstatic" "zlib"
+		"add_library(zlib SHARED" "add_library(zlib"
+		"add_library(zlibstatic STATIC" "# add_library(zlibstatic STATIC"
+	)
 
 	file(APPEND "${workingDirectory}/CMakeLists.txt"
 		"\n"
