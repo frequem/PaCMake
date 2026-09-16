@@ -2,15 +2,15 @@ pacmake_include(log)
 pacmake_include(run_patch)
 pacmake_include(compare_files)
 
-function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
-	pacmake_log("fetch_package(${packageName} ${packageVersion}):" INCREMENT)
+function(pacmake_fetch_package packageName packageVariant packageVersion out_packageUpdated)
+	pacmake_log("fetch_package(${packageName} ${packageVariant} ${packageVersion}):" INCREMENT)
 
 	set(prevSource "")
 	set(prevSourceTimestamp 0)
 	set(prevSourceAvailable TRUE)
-	if(EXISTS "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/DONE")
-		file(STRINGS "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/DONE" prevSource)
-		file(TIMESTAMP "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/DONE" prevSourceTimestamp "%s" UTC)
+	if(EXISTS "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/DONE")
+		file(STRINGS "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/DONE" prevSource)
+		file(TIMESTAMP "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/DONE" prevSourceTimestamp "%s" UTC)
 		set(prevSourceAvailable FALSE)
 	endif()
 
@@ -19,8 +19,8 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 
 	set(nSources -1)
 	set(sourceOrder "")
-	set(sourceTypes EMPTY LOCAL URL GIT SVN HG CVS)
-	foreach(entry IN LISTS PACMAKE_PACKAGE_${packageName}_${packageVersion}_SOURCES)
+	set(sourceTypes NO_SOURCE LOCAL URL GIT SVN HG CVS)
+	foreach(entry IN LISTS PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_SOURCES)
 		if(${entry} IN_LIST sourceTypes)
 			math(EXPR nSources "${nSources} + 1")
 			list(APPEND sourceOrder ${nSources})
@@ -74,7 +74,7 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 
 	set(forcedSourceUpdate FALSE)
 	foreach(packageRegex IN LISTS PACMAKE_FORCE_SOURCE_UPDATE_PACKAGES)
-		if("${packageName} ${packageVersion}" MATCHES "^${packageRegex}$" OR "${packageName}" MATCHES "^${packageRegex}$")
+		if("${packageName}::${packageVariant} ${packageVersion}" MATCHES "^${packageRegex}$" OR "${packageName}::${packageVariant}" MATCHES "^${packageRegex}$" OR "${packageName}" MATCHES "^${packageRegex}$")
 			set(forcedSourceUpdate TRUE)
 			break()
 		endif()
@@ -82,15 +82,15 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 
 	set(forcedFetch FALSE)
 	foreach(packageRegex IN LISTS PACMAKE_FORCE_FETCH_PACKAGES)
-		if("${packageName} ${packageVersion}" MATCHES "^${packageRegex}$" OR "${packageName}" MATCHES "^${packageRegex}$")
+		if("${packageName}::${packageVariant} ${packageVersion}" MATCHES "^${packageRegex}$" OR "${packageName}::${packageVariant}" MATCHES "^${packageRegex}$" OR "${packageName}" MATCHES "^${packageRegex}$")
 			set(forcedFetch TRUE)
 			break()
 		endif()
 	endforeach()
 
 	set(${out_packageUpdated} FALSE PARENT_SCOPE)
-	if(NOT forcedFetch AND prevSource AND prevSourceAvailable AND (PACMAKE_PACKAGE_${packageName}_${packageVersion}_FINAL OR ${PACMAKE_PACKAGE_FETCH_INTERVAL} LESS 0 OR ${prevSourceTimePassed} LESS ${PACMAKE_PACKAGE_FETCH_INTERVAL}))
-		if(PACMAKE_PACKAGE_${packageName}_${packageVersion}_FINAL OR ${PACMAKE_PACKAGE_FETCH_INTERVAL} LESS 0)
+	if(NOT forcedFetch AND prevSource AND prevSourceAvailable AND (PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_FINAL OR ${PACMAKE_PACKAGE_FETCH_INTERVAL} LESS 0 OR ${prevSourceTimePassed} LESS ${PACMAKE_PACKAGE_FETCH_INTERVAL}))
+		if(PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_FINAL OR ${PACMAKE_PACKAGE_FETCH_INTERVAL} LESS 0)
 			set(nextFetchTime "the end of time")
 		else()
 			math(EXPR nextFetchTime "${prevSourceTimestamp} + ${PACMAKE_PACKAGE_FETCH_INTERVAL}")
@@ -99,7 +99,7 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 			unset(ENV{SOURCE_DATE_EPOCH})
 		endif()
 
-		if(PACMAKE_PACKAGE_${packageName}_${packageVersion}_FINAL)
+		if(PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_FINAL)
 			pacmake_log("Package files exist and version was specified as FINAL, skipping fetch operation.")
 		else()
 			pacmake_log("Package files exist and are current until ${nextFetchTime}, skipping fetch operation.")
@@ -123,10 +123,10 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 		endif()
 
 		file(WRITE
-			"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt"
+			"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt"
 			"cmake_minimum_required(VERSION 3.11)\n\n"
-			"project(PaCMake-packageFetcher_${packageName} DESCRIPTION \"PaCMake package fetcher (${packageName} ${packageVersion})\" LANGUAGES NONE)\n\n"
-			"add_custom_target(\${PROJECT_NAME}_removePrevSourceFiles COMMAND \${CMAKE_COMMAND} -E rm -Rf \"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/next/*\")\n"
+			"project(PaCMake-packageFetcher_${packageName}_${packageVariant} DESCRIPTION \"PaCMake package fetcher (${packageName} ${packageVariant} ${packageVersion})\" LANGUAGES NONE)\n\n"
+			"add_custom_target(\${PROJECT_NAME}_removePrevSourceFiles COMMAND \${CMAKE_COMMAND} -E rm -Rf \"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/next/*\")\n"
 			"include(ExternalProject)\n\n"
 			"if(NOT PACMAKE_PACKAGE_SOURCE_INDEX)\n"
 			"\tset(PACMAKE_PACKAGE_SOURCE_INDEX 0)\n"
@@ -137,50 +137,50 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 		if(${nSources} GREATER_EQUAL 0)
 			foreach(i RANGE ${nSources})
 				file(APPEND
-					"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt"
+					"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt"
 					"if(\${PACMAKE_PACKAGE_SOURCE_INDEX} EQUAL ${i})\n"
 					"\tset(sourceArgs\n"
 				)
 
-				if(sourceType_${i} STREQUAL "EMPTY")
+				if(sourceType_${i} STREQUAL "NO_SOURCE")
 					file(APPEND
-						"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt"
-						"\t\tDOWNLOAD_COMMAND \${CMAKE_COMMAND} -E make_directory \"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/next\"\n"
+						"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt"
+						"\t\tDOWNLOAD_COMMAND \${CMAKE_COMMAND} -E make_directory \"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/next\"\n"
 						"\t\tDEPENDS \${PROJECT_NAME}_removePrevSourceFiles\n"
 					)
 				elseif(sourceType_${i} STREQUAL "LOCAL")
 					file(APPEND
-						"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt"
-						"\t\tDOWNLOAD_COMMAND \${CMAKE_COMMAND} -E copy_directory \"${source_${i}}/\" \"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/next\"\n"
-						"\t\tUPDATE_COMMAND \${CMAKE_COMMAND} -E copy_directory \"${source_${i}}/\" \"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/next\"\n"
+						"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt"
+						"\t\tDOWNLOAD_COMMAND \${CMAKE_COMMAND} -E copy_directory \"${source_${i}}/\" \"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/next\"\n"
+						"\t\tUPDATE_COMMAND \${CMAKE_COMMAND} -E copy_directory \"${source_${i}}/\" \"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/next\"\n"
 						"\t\tDEPENDS \${PROJECT_NAME}_removePrevSourceFiles\n"
 					)
 				elseif(sourceType_${i} STREQUAL "URL")
 					file(APPEND
-						"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt"
-						"\t\tDOWNLOAD_DIR \"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch\"\n"
+						"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt"
+						"\t\tDOWNLOAD_DIR \"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch\"\n"
 						"\t\tURL \"${source_${i}}\"\n"
 					)
 				else()
-					file(APPEND "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt" "\t\t${sourceType_${i}}_REPOSITORY \"${source_${i}}\"\n")
+					file(APPEND "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt" "\t\t${sourceType_${i}}_REPOSITORY \"${source_${i}}\"\n")
 				endif()
 
 				if(sourceParams_${i})
-					file(APPEND "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt" "\t\t${sourceParams_${i}}\n")
+					file(APPEND "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt" "\t\t${sourceParams_${i}}\n")
 				endif()
 
-				file(APPEND "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt" "\t)\nelse")
+				file(APPEND "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt" "\t)\nelse")
 			endforeach()
 		endif()
 
 		file(APPEND
-			"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/CMakeLists.txt"
+			"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/CMakeLists.txt"
 			"if(TRUE)\n"
-			"\tmessage(FATAL_ERROR \"PaCMake package fetcher (${packageName} ${packageVersion}): No valid package source index given.\")\n"
+			"\tmessage(FATAL_ERROR \"PaCMake package fetcher (${packageName} ${packageVariant} ${packageVersion}): No valid package source index given.\")\n"
 			"endif()\n\n"
 			"ExternalProject_Add(\n"
 			"\t\${PROJECT_NAME}\n"
-			"\tSOURCE_DIR \"${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/next\"\n"
+			"\tSOURCE_DIR \"${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/next\"\n"
 			"\t\${sourceArgs}\n"
 			"\tCONFIGURE_COMMAND \"\" BUILD_COMMAND \"\" INSTALL_COMMAND \"\"\n"
 			")\n"
@@ -194,13 +194,13 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 		set(finalSource "")
 		foreach(i IN LISTS sourceOrder)
 			if(NOT "${sourceType_${i}} ${source_${i}} ${sourceParams_${i}}" STREQUAL "${prevSource}")
-				file(REMOVE_RECURSE "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/build")
+				file(REMOVE_RECURSE "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/build")
 			endif()
 
 			pacmake_log("Selecting source #${i}: ${sourceType_${i}} ${source_${i}} ${sourceParams_${i}}")
 			execute_process(
 				COMMAND "${CMAKE_COMMAND}" -B "build" -S "." ${no_author_warnings} -DPACMAKE_PACKAGE_SOURCE_INDEX=${i}
-				WORKING_DIRECTORY "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch"
+				WORKING_DIRECTORY "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch"
 				RESULT_VARIABLE result
 				OUTPUT_QUIET
 			)
@@ -212,7 +212,7 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 			pacmake_log("Performing package fetch operation, please be patient...")
 			execute_process(
 				COMMAND "${CMAKE_COMMAND}" --build "build"
-				WORKING_DIRECTORY "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch"
+				WORKING_DIRECTORY "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch"
 				RESULT_VARIABLE result
 				OUTPUT_QUIET
 			)
@@ -225,26 +225,26 @@ function(pacmake_fetch_package packageName packageVersion out_packageUpdated)
 		endforeach()
 
 		if(NOT finalSource)
-			message(FATAL_ERROR "PaCMake: fetch_package(${packageName} ${packageVersion}): Could not fetch any source.")
+			message(FATAL_ERROR "PaCMake: fetch_package(${packageName} ${packageVariant} ${packageVersion}): Could not fetch any source.")
 		endif()
-		file(WRITE "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/fetch/DONE" "${finalSource}")
+		file(WRITE "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/fetch/DONE" "${finalSource}")
 	endif()
 
 	set(packageSourcesEqual FALSE)
 	if(forcedSourceUpdate)
 		pacmake_log("Performing (forced) source update.")
 	else() # skip compare if update is forced anyway
-		pacmake_compare_files("${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/next" "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/orig" packageSourcesEqual)
+		pacmake_compare_files("${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/next" "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/orig" packageSourcesEqual)
 	endif()
 
 	if(packageSourcesEqual)
 		pacmake_log("Sources unchanged, keeping previous package.")
 	else()
-		file(REMOVE_RECURSE "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/orig")
-		file(COPY "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/next/" DESTINATION "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/orig/")
+		file(REMOVE_RECURSE "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/orig")
+		file(COPY "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/next/" DESTINATION "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/orig/")
 
-		file(COPY "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/orig/" DESTINATION "${PACMAKE_HOME}/package/${packageName}/${packageVersion}/src/cur/")
-		pacmake_run_patch(${packageName} ${packageVersion} SOURCE)
+		file(COPY "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/orig/" DESTINATION "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}/src/cur/")
+		pacmake_run_patch(${packageName} ${packageVariant} ${packageVersion} SOURCE)
 		set(${out_packageUpdated} TRUE PARENT_SCOPE)
 	endif()
 

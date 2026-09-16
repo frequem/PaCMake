@@ -1,29 +1,11 @@
 pacmake_register_package(
-	1.89.8 FINAL
-	SOURCES EMPTY
-	DEPENDENCIES imgui 1.89.8 glfw3 3.3.8
-)
-
-pacmake_register_package(
-	1.89.9 FINAL
-	SOURCES EMPTY
-	DEPENDENCIES imgui 1.89.9 glfw3 3.3.8
-)
-
-pacmake_register_package(
-	1.90.4 FINAL
-	SOURCES EMPTY
-	DEPENDENCIES imgui 1.90.4 glfw3 3.4
-)
-
-pacmake_register_package(
-	1.90.5 FINAL
-	SOURCES EMPTY
-	DEPENDENCIES imgui 1.90.5 glfw3 3.4
-)
-
-pacmake_register_package(
 	1.92.8 FINAL
-	SOURCES EMPTY
+	SOURCES NO_SOURCE
 	DEPENDENCIES imgui 1.92.8 glfw3 3.4
+)
+
+pacmake_register_package(
+	VARIANT docking 1.92.8 FINAL
+	SOURCES NO_SOURCE
+	DEPENDENCIES imgui::docking 1.92.8 glfw3 3.4
 )

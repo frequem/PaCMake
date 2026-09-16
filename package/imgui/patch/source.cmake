@@ -1,5 +1,5 @@
 
-function(pacmake_patch packageName packageVersion workingDirectory)
+function(pacmake_patch packageName packageVariant packageVersion workingDirectory)
 	file(WRITE "${workingDirectory}/CMakeLists.txt"
 		"cmake_minimum_required(VERSION 3.11)\n"
 		"\n"

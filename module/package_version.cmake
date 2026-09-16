@@ -1,4 +1,4 @@
-# pacmake_find_package_version(packageName packageVersionRequested out_packageVersion)
+# pacmake_find_package_version(packageName packageVariant packageVersionRequested out_packageVersion)
 # packageVersionRequested:
 #   ""
 # 	0.0.0
@@ -7,11 +7,11 @@
 # 	0.0.0...<1
 # 	0...1.0.0
 # 	<1.0.0
-function(pacmake_find_package_version packageName packageVersionRequested out_packageVersion)
-	if(NOT PACMAKE_PACKAGE_${packageName}_VERSIONS)
-		message(FATAL_ERROR "PaCMake: find_package_version(${packageName}): No versions registered for this package.")
+function(pacmake_find_package_version packageName packageVariant packageVersionRequested out_packageVersion)
+	if(NOT PACMAKE_PACKAGE_${packageName}_${packageVariant}_VERSIONS)
+		message(FATAL_ERROR "PaCMake: find_package_version(${packageName} ${packageVariant}): No versions registered for this package.")
 	elseif(NOT packageVersionRequested) # none specified, use default (first)
-		list(GET PACMAKE_PACKAGE_${packageName}_VERSIONS 0 latestVersion)
+		list(GET PACMAKE_PACKAGE_${packageName}_${packageVariant}_VERSIONS 0 latestVersion)
 		set(${out_packageVersion} ${latestVersion} PARENT_SCOPE)
 	else()
 		string(FIND ${packageVersionRequested} "..." i)
@@ -22,46 +22,45 @@ function(pacmake_find_package_version packageName packageVersionRequested out_pa
 			math(EXPR i "${i} + 3")
 			string(SUBSTRING ${packageVersionRequested} ${i} -1 maxVersion)
 		endif()
-		
+
 		set(maxVersionIncluded TRUE)
 		string(FIND "${maxVersion}" "<" j)
 		if(${j} EQUAL 0)
 			set(maxVersionIncluded FALSE)
 			string(SUBSTRING ${maxVersion} 1 -1 maxVersion)
 			if(maxVersion STREQUAL "")
-				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName}): Expected maximum version not specified(${packageVersionRequested}).")
+				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName} ${packageVariant}): Expected maximum version not specified(${packageVersionRequested}).")
 			elseif(minVersion STREQUAL packageVersionRequested)
 				set(minVersion "")
 			endif()
 		endif()
-		#message("${packageName} ${PACMAKE_PACKAGE_${packageName}_VERSIONS}")
+		#message("${packageName} ${PACMAKE_PACKAGE_${packageName}_${packageVariant}_VERSIONS}")
 		if(${i} LESS 0 AND ${j} LESS 0) # single version
-			if(${packageVersionRequested} IN_LIST PACMAKE_PACKAGE_${packageName}_VERSIONS)
+			if(${packageVersionRequested} IN_LIST PACMAKE_PACKAGE_${packageName}_${packageVariant}_VERSIONS)
 				set(${out_packageVersion} ${packageVersionRequested} PARENT_SCOPE)
 				return()
 			else()
-				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName}): Version not found(${packageVersionRequested}).")
+				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName} ${packageVariant}): Version not found(${packageVersionRequested}).")
 			endif()
 		endif()
-		
+
 		string(REPLACE "." ";" minVersionParts "${minVersion}")
 		foreach(minVersionPart IN LISTS minVersionParts)
 			if(NOT minVersionPart MATCHES "^[0-9]+$")
-				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName}): Invalid minimum version(${minVersion}).")
+				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName} ${packageVariant}): Invalid minimum version(${minVersion}).")
 			endif()
 		endforeach()
 		list(LENGTH minVersionParts nMinVersionParts)
-		
+
 		string(REPLACE "." ";" maxVersionParts "${maxVersion}")
 		foreach(maxVersionPart IN LISTS maxVersionParts)
 			if(NOT maxVersionPart MATCHES "^[0-9]+$")
-				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName}): Invalid maximum version(${maxVersion}).")
+				message(FATAL_ERROR "PaCMake: pacmake_find_package_version(${packageName} ${packageVariant}): Invalid maximum version(${maxVersion}).")
 			endif()
 		endforeach()
 		list(LENGTH maxVersionParts nMaxVersionParts)
-		
-		set(validVersionCandidates "")
-		foreach(version IN LISTS PACMAKE_PACKAGE_${packageName}_VERSIONS)
+
+		foreach(version IN LISTS PACMAKE_PACKAGE_${packageName}_${packageVariant}_VERSIONS)
 			string(REPLACE "." ";" versionParts "${version}")
 			list(LENGTH versionParts nVersionParts)
 			math(EXPR nVersionParts "${nVersionParts} - 1")
@@ -71,11 +70,11 @@ function(pacmake_find_package_version packageName packageVersionRequested out_pa
 				list(APPEND versionParts ${lastVersionPart})
 				math(EXPR nVersionParts "${nVersionParts} + 1")
 			endif()
-			
+
 			if(nMinVersionParts GREATER nVersionParts OR nMaxVersionParts GREATER nVersionParts)
 				continue()
 			endif()
-			
+
 			set(i 0)
 			while(${i} LESS nMinVersionParts)
 				list(GET minVersionParts ${i} minVersionPart)
@@ -91,7 +90,7 @@ function(pacmake_find_package_version packageName packageVersionRequested out_pa
 			if(i LESS nMinVersionParts)
 				continue()
 			endif()
-			
+
 			set(i 0)
 			while(${i} LESS nMaxVersionParts)
 				list(GET maxVersionParts ${i} maxVersionPart)
@@ -111,11 +110,11 @@ function(pacmake_find_package_version packageName packageVersionRequested out_pa
 			if(i LESS nMaxVersionParts)
 				continue()
 			endif()
-			
+
 			set(${out_packageVersion} ${version} PARENT_SCOPE)
 			return()
 		endforeach()
-		
-		message(FATAL_ERROR "PaCMake: find_package_version(${packageName}): No compatible version found(${packageVersionRequested}).")
+
+		message(FATAL_ERROR "PaCMake: find_package_version(${packageName} ${packageVariant}): No compatible version found(${packageVersionRequested}).")
 	endif()
 endfunction()

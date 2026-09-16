@@ -1,6 +1,6 @@
 pacmake_include(textfile)
 
-function(pacmake_patch packageName packageVersion workingDirectory)
+function(pacmake_patch packageName packageVariant packageVersion workingDirectory)
 	pacmake_textfile_replace("${workingDirectory}/CMakeLists.txt" "${workingDirectory}/CMakeLists.txt"
 		STRING
 		"find_package(Cares MODULE REQUIRED)" "find_package(c-ares REQUIRED)"

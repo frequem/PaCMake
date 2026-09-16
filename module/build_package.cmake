@@ -61,18 +61,18 @@ function(pacmake_find_config_directory packageName installPath out_configDirecto
 	set(${out_configDirectory} "${configPath}" PARENT_SCOPE)
 endfunction(pacmake_find_config_directory)
 
-# pacmake_build_package(packageName packageVersion STATIC|SHARED|MODULE PIC|NO_PIC [FORCE] [REBUILT_VARIABLE rebuiltVariable])
-function(pacmake_build_package packageName packageVersion packageType packagePIC)
+# pacmake_build_package(packageName packageVariant packageVersion STATIC|SHARED|MODULE PIC|NO_PIC [FORCE] [REBUILT_VARIABLE rebuiltVariable])
+function(pacmake_build_package packageName packageVariant packageVersion packageType packagePIC)
 	cmake_parse_arguments(args "FORCE" "REBUILT_VARIABLE" "" ${ARGN})
 
-	string(REPLACE ";" " " functionCall "build_package(${packageName} ${packageVersion} ${packageType} ${packagePIC}")
+	string(REPLACE ";" " " functionCall "build_package(${packageName} ${packageVariant} ${packageVersion} ${packageType} ${packagePIC}")
 	if(args_FORCE)
 		string(APPEND functionCall " FORCE")
 	endif()
 	string(APPEND functionCall ")")
 	pacmake_log("${functionCall}:" INCREMENT)
 
-	set(packageDirectory "${PACMAKE_HOME}/package/${packageName}/${packageVersion}")
+	set(packageDirectory "${PACMAKE_HOME}/package/${packageName}/${packageVariant}/${packageVersion}")
 	set(buildDirectory "${packageDirectory}/build/${CMAKE_SYSTEM}-${CMAKE_SYSTEM_PROCESSOR}/${packageType}-${packagePIC}-${PACMAKE_BUILD_TYPE}/")
 	set(installDirectory "${packageDirectory}/install/${CMAKE_SYSTEM}-${CMAKE_SYSTEM_PROCESSOR}/${packageType}-${packagePIC}-${PACMAKE_BUILD_TYPE}/")
 
@@ -90,14 +90,14 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 			pacmake_log("Build files exists, skipping configuration.")
 		else()
 			set(dependencyDirs "")
-			if(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS)
-				list(LENGTH PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS nDependencyDirs)
+			if(PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS)
+				list(LENGTH PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS nDependencyDirs)
 				math(EXPR nDependencyDirs "${nDependencyDirs} / 2 - 1")
 				foreach(i RANGE ${nDependencyDirs})
 					math(EXPR iDependencyName "${i} * 2")
 					math(EXPR iDependencyDir "${i} * 2 + 1")
-					list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS ${iDependencyName} dependencyName)
-					list(GET PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS ${iDependencyDir} dependencyDir)
+					list(GET PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS ${iDependencyName} dependencyName)
+					list(GET PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_${packageType}_${packagePIC}_DEPENDENCY_CONFIG_DIRS ${iDependencyDir} dependencyDir)
 					list(APPEND dependencyDirs "-D${dependencyName}_DIR=${dependencyDir}")
 				endforeach()
 			endif()
@@ -134,7 +134,7 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 				"-DPACMAKE_DEFAULT_LIBRARY_TYPE=${packageType}"
 				"-DPACMAKE_DEFAULT_PIC=${packagePIC}"
 				"-DPACMAKE_BUILD_TYPE=${PACMAKE_BUILD_TYPE}"
-				${PACMAKE_PACKAGE_${packageName}_${packageVersion}_CMAKE_ARGS}
+				${PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_CMAKE_ARGS}
 				WORKING_DIRECTORY "${packageDirectory}/src/cur"
 				RESULT_VARIABLE result
 				OUTPUT_FILE "${buildDirectory}/PaCMake_build_package/configure.log"
@@ -142,10 +142,10 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 			)
 			if(NOT result EQUAL 0)
 				file(READ "${buildDirectory}/PaCMake_build_package/configure.log" contents)
-				message("\n${packageName} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/configure.log):\n${contents}")
+				message("\n${packageName} ${packageVariant} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/configure.log):\n${contents}")
 				message(FATAL_ERROR "PaCMake: ${functionCall}: Configuration failed.")
 			endif()
-			pacmake_run_patch(${packageName} ${packageVersion} ${packageType} ${packagePIC} CONFIGURE)
+			pacmake_run_patch(${packageName} ${packageVariant} ${packageVersion} ${packageType} ${packagePIC} CONFIGURE)
 			file(WRITE "${buildDirectory}/PaCMake_build_package/configure.DONE")
 		endif()
 
@@ -168,10 +168,10 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 			)
 			if(NOT result EQUAL 0)
 				file(READ "${buildDirectory}/PaCMake_build_package/build.log" contents)
-				message("\n${packageName} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/build.log):\n${contents}")
+				message("\n${packageName} ${packageVariant} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/build.log):\n${contents}")
 				message(FATAL_ERROR "PaCMake: ${functionCall}: Build failed.")
 			endif()
-			pacmake_run_patch(${packageName} ${packageVersion} ${packageType} ${packagePIC} BUILD)
+			pacmake_run_patch(${packageName} ${packageVariant} ${packageVersion} ${packageType} ${packagePIC} BUILD)
 			file(WRITE "${buildDirectory}/PaCMake_build_package/build.DONE")
 		endif()
 
@@ -185,10 +185,10 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 		)
 		if(NOT result EQUAL 0)
 			file(READ "${buildDirectory}/PaCMake_build_package/install.log" contents)
-			message("\n${packageName} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/install.log):\n${contents}")
+			message("\n${packageName} ${packageVariant} ${packageVersion} ${packageType} ${packagePIC} Configuration log (${buildDirectory}/PaCMake_build_package/install.log):\n${contents}")
 			message(FATAL_ERROR "PaCMake: ${functionCall}: Installation failed.")
 		endif()
-		pacmake_run_patch(${packageName} ${packageVersion} ${packageType} ${packagePIC} INSTALL)
+		pacmake_run_patch(${packageName} ${packageVariant} ${packageVersion} ${packageType} ${packagePIC} INSTALL)
 
 		if(args_REBUILT_VARIABLE)
 			set(${args_REBUILT_VARIABLE} TRUE PARENT_SCOPE)
@@ -196,6 +196,6 @@ function(pacmake_build_package packageName packageVersion packageType packagePIC
 	endif()
 
 	pacmake_find_config_directory(${packageName} ${installDirectory} configDirectory)
-	set(PACMAKE_PACKAGE_${packageName}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_DIR "${configDirectory}" CACHE INTERNAL "")
+	set(PACMAKE_PACKAGE_${packageName}_${packageVariant}_${packageVersion}_${packageType}_${packagePIC}_CONFIG_DIR "${configDirectory}" CACHE INTERNAL "")
 	pacmake_log_indent(DECREMENT)
 endfunction()
